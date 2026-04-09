@@ -61,7 +61,34 @@
     ]);
     state.conversations = data.conversations || [];
     state.activeConversationId = data.activeConversationId || null;
-    state.settings = data.settings || getDefaultSettings();
+    state.settings = normalizeSettings(data.settings);
+  }
+
+  function normalizeSettings(rawSettings) {
+    const defaults = getDefaultSettings();
+    const s = rawSettings || {};
+    return {
+      ...defaults,
+      ...s,
+      apiKeys: {
+        ...defaults.apiKeys,
+        ...(s.apiKeys || {}),
+      },
+      baseUrls: {
+        ...defaults.baseUrls,
+        ...(s.baseUrls || {}),
+      },
+      models: {
+        ...defaults.models,
+        ...(s.models || {}),
+      },
+    };
+  }
+
+  async function reloadSettingsFromStorage() {
+    const data = await chrome.storage.local.get("settings");
+    state.settings = normalizeSettings(data.settings);
+    applySettings();
   }
 
   function getDefaultSettings() {
@@ -202,9 +229,14 @@
     // Listen for settings changes
     chrome.storage.onChanged.addListener((changes) => {
       if (changes.settings) {
-        state.settings = changes.settings.newValue;
+        state.settings = normalizeSettings(changes.settings.newValue);
         applySettings();
       }
+    });
+
+    // If popup is used as a full tab, sync settings when it becomes visible again.
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) reloadSettingsFromStorage();
     });
 
     // System theme change
@@ -436,12 +468,15 @@
 
   // ---- Send Message ----
   async function sendMessage() {
+    await reloadSettingsFromStorage();
+
     const text = dom.messageInput.value.trim();
     if (!text || state.isLoading) return;
 
     // Check API Key
     const _provider = state.settings.provider || "perplexity";
-    const _apiKey = state.settings.apiKeys?.[_provider] || state.settings.apiKey || "";
+    const _apiKey =
+      state.settings.apiKeys?.[_provider] || state.settings.apiKey || "";
     if (_provider !== "lmstudio" && !_apiKey) {
       showToast("Bitte API Key in den Einstellungen hinterlegen", "error");
       return;

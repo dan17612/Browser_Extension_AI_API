@@ -66,8 +66,22 @@
 
   function getDefaultSettings() {
     return {
-      apiKey: "",
-      model: "sonar",
+      provider: "perplexity",
+      apiKeys: { perplexity: "", openai: "", anthropic: "", gemini: "" },
+      baseUrls: {
+        perplexity: "",
+        openai: "",
+        anthropic: "",
+        gemini: "",
+        lmstudio: "http://localhost:1234",
+      },
+      models: {
+        perplexity: "sonar",
+        openai: "gpt-4o-mini",
+        anthropic: "claude-sonnet-4-6",
+        gemini: "gemini-2.0-flash",
+        lmstudio: "",
+      },
       temperature: 0.7,
       maxTokens: 2048,
       systemPrompt:
@@ -101,7 +115,9 @@
       s.fontSize + "px",
     );
     // Model badge
-    dom.modelBadge.textContent = s.model;
+    const provider = s.provider || "perplexity";
+    const currentModel = s.models?.[provider] || s.model || provider;
+    dom.modelBadge.textContent = currentModel;
     // Input hint
     dom.inputHintText.textContent = s.sendWithEnter
       ? "Enter zum Senden, Shift+Enter fur neue Zeile"
@@ -424,7 +440,9 @@
     if (!text || state.isLoading) return;
 
     // Check API Key
-    if (!state.settings.apiKey) {
+    const _provider = state.settings.provider || "perplexity";
+    const _apiKey = state.settings.apiKeys?.[_provider] || state.settings.apiKey || "";
+    if (_provider !== "lmstudio" && !_apiKey) {
       showToast("Bitte API Key in den Einstellungen hinterlegen", "error");
       return;
     }

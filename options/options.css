@@ -722,3 +722,51 @@ body {
     flex-wrap: wrap;
   }
 }
+
+/* ---- Utilities ---- */
+.hidden {
+  display: none !important;
+}
+
+/* ---- Advanced URL collapsible ---- */
+details.setting-group {
+  padding: 0;
+}
+
+details.setting-group summary.advanced-summary {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  user-select: none;
+  font-size: 13px;
+  color: var(--color-accent);
+  padding: 12px 0;
+  border-radius: var(--radius-sm);
+}
+
+details.setting-group summary.advanced-summary::-webkit-details-marker {
+  display: none;
+}
+
+details.setting-group summary.advanced-summary:hover {
+  color: var(--color-text-primary);
+}
+
+details.setting-group summary.advanced-summary .chevron {
+  transition: transform var(--transition);
+  flex-shrink: 0;
+}
+
+details.setting-group[open] summary.advanced-summary .chevron {
+  transform: rotate(90deg);
+}
+
+details.setting-group .advanced-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-bottom: 4px;
+}
+}

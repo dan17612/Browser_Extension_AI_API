@@ -148,17 +148,29 @@
           <section id="section-api" class="settings-section active">
             <div class="section-header">
               <h2>API-Konfiguration</h2>
-              <p>Verbinde deine Perplexity API fur KI-gestutzte Antworten</p>
+              <p>Wahle deinen KI-Anbieter und konfiguriere den API Key</p>
             </div>
 
             <div class="setting-group">
+              <label class="setting-label" for="provider-select">KI-Anbieter</label>
+              <select id="provider-select" class="input">
+                <option value="perplexity">Perplexity</option>
+                <option value="openai">ChatGPT (OpenAI)</option>
+                <option value="anthropic">Claude (Anthropic)</option>
+                <option value="gemini">Gemini (Google)</option>
+                <option value="lmstudio">LM Studio (Lokal)</option>
+              </select>
+            </div>
+
+            <div class="setting-group" id="api-key-group">
               <label class="setting-label" for="api-key">
-                API Key
+                <span id="api-key-label">API Key</span>
                 <a
-                  href="https://docs.perplexity.ai/docs/getting-started/overview"
+                  href="#"
                   target="_blank"
                   rel="noopener"
                   class="help-link"
+                  id="api-key-help"
                 >
                   Wo bekomme ich einen Key?
                   <svg
@@ -211,6 +223,58 @@
               >
             </div>
 
+            <!-- LM Studio: URL shown prominently -->
+            <div class="setting-group hidden" id="lmstudio-url-group">
+              <label class="setting-label" for="lmstudio-url">Server-URL</label>
+              <input
+                type="text"
+                id="lmstudio-url"
+                class="input"
+                placeholder="http://localhost:1234"
+                autocomplete="off"
+                spellcheck="false"
+              />
+              <span class="setting-hint"
+                >URL des LM Studio lokalen Servers. Standard:
+                http://localhost:1234</span
+              >
+            </div>
+
+            <!-- Known providers: URL override in collapsible -->
+            <details class="setting-group hidden" id="advanced-url-group">
+              <summary class="advanced-summary">
+                <svg
+                  class="chevron"
+                  width="12"
+                  height="12"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                >
+                  <polyline points="9 18 15 12 9 6" />
+                </svg>
+                Erweitert
+              </summary>
+              <div class="advanced-content">
+                <label class="setting-label" for="base-url"
+                  >Basis-URL (optional)</label
+                >
+                <input
+                  type="text"
+                  id="base-url"
+                  class="input"
+                  placeholder=""
+                  autocomplete="off"
+                  spellcheck="false"
+                />
+                <span class="setting-hint"
+                  >Leer lassen für den Standard-Endpunkt. Nur für eigene Proxies
+                  oder OpenAI-kompatible APIs ändern.</span
+                >
+              </div>
+            </details>
+
             <div class="setting-group">
               <label class="setting-label">Verbindungstest</label>
               <button id="btn-test-api" class="btn btn-primary">
@@ -238,45 +302,41 @@
             </div>
 
             <div class="setting-group">
-              <label class="setting-label" for="model">Modell</label>
-              <div class="model-grid">
-                <label class="model-card">
-                  <input type="radio" name="model" value="sonar" />
-                  <div class="model-card-content">
-                    <strong>Sonar</strong>
-                    <span>Schnell & effizient</span>
-                    <span class="model-tag">Standard</span>
-                  </div>
-                </label>
-                <label class="model-card">
-                  <input type="radio" name="model" value="sonar-pro" />
-                  <div class="model-card-content">
-                    <strong>Sonar Pro</strong>
-                    <span>Hohere Qualitat</span>
-                    <span class="model-tag pro">Pro</span>
-                  </div>
-                </label>
-                <label class="model-card">
-                  <input type="radio" name="model" value="sonar-reasoning" />
-                  <div class="model-card-content">
-                    <strong>Sonar Reasoning</strong>
-                    <span>Logisches Denken</span>
-                    <span class="model-tag reasoning">Reasoning</span>
-                  </div>
-                </label>
-                <label class="model-card">
-                  <input
-                    type="radio"
-                    name="model"
-                    value="sonar-reasoning-pro"
-                  />
-                  <div class="model-card-content">
-                    <strong>Sonar Reasoning Pro</strong>
-                    <span>Beste Qualitat</span>
-                    <span class="model-tag pro">Top</span>
-                  </div>
-                </label>
+              <label class="setting-label" for="model-select">Modell</label>
+              <select id="model-select" class="input"></select>
+            </div>
+
+            <div class="setting-group hidden" id="lmstudio-model-group">
+              <label class="setting-label">Modell</label>
+              <div class="input-with-action">
+                <select id="lmstudio-model" class="input">
+                  <option value="">-- Modelle laden --</option>
+                </select>
+                <button
+                  id="btn-load-models"
+                  class="btn-icon"
+                  title="Modelle von LM Studio laden"
+                >
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <polyline points="23 4 23 10 17 10" />
+                    <polyline points="1 20 1 14 7 14" />
+                    <path
+                      d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"
+                    />
+                  </svg>
+                </button>
               </div>
+              <span id="lmstudio-model-hint" class="setting-hint"
+                >LM Studio starten und auf das Aktualisieren-Symbol
+                klicken.</span
+              >
             </div>
 
             <div class="setting-group">

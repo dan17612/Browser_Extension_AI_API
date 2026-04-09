@@ -61,13 +61,24 @@
     ]);
     state.conversations = data.conversations || [];
     state.activeConversationId = data.activeConversationId || null;
-    state.settings = data.settings || getDefaultSettings();
+    state.settings = migrateSettings(data.settings || getDefaultSettings());
   }
 
   function getDefaultSettings() {
     return {
-      apiKey: "",
-      model: "sonar",
+      activeProfileId: "default",
+      profiles: [
+        {
+          id: "default",
+          name: "Perplexity",
+          provider: "perplexity",
+          endpoint: "https://api.perplexity.ai/chat/completions",
+          model: "sonar",
+          apiKey: "",
+          requiresApiKey: true,
+          isLocal: false,
+        },
+      ],
       temperature: 0.7,
       maxTokens: 2048,
       systemPrompt:
@@ -87,9 +98,42 @@
     });
   }
 
+  function migrateSettings(raw) {
+    const fallback = getDefaultSettings();
+    const merged = { ...fallback, ...(raw || {}) };
+
+    if (!Array.isArray(merged.profiles) || merged.profiles.length === 0) {
+      merged.profiles = [
+        {
+          ...fallback.profiles[0],
+          apiKey: raw?.apiKey || "",
+          model: raw?.model || fallback.profiles[0].model,
+        },
+      ];
+      merged.activeProfileId = fallback.activeProfileId;
+    }
+
+    if (!merged.profiles.some((p) => p.id === merged.activeProfileId)) {
+      merged.activeProfileId = merged.profiles[0].id;
+    }
+
+    return merged;
+  }
+
+  function getActiveProfile() {
+    const settings = state.settings || getDefaultSettings();
+    const profiles = Array.isArray(settings.profiles) ? settings.profiles : [];
+    if (profiles.length === 0) return null;
+    return (
+      profiles.find((profile) => profile.id === settings.activeProfileId) ||
+      profiles[0]
+    );
+  }
+
   // ---- Settings ----
   function applySettings() {
     const s = state.settings;
+    const activeProfile = getActiveProfile();
     // Theme
     const resolvedTheme = s.theme === "system" ? getSystemTheme() : s.theme;
     dom.app.className = `theme-${resolvedTheme}`;
@@ -101,7 +145,9 @@
       s.fontSize + "px",
     );
     // Model badge
-    dom.modelBadge.textContent = s.model;
+    dom.modelBadge.textContent = activeProfile
+      ? `${activeProfile.provider}: ${activeProfile.model}`
+      : "Kein Profil";
     // Input hint
     dom.inputHintText.textContent = s.sendWithEnter
       ? "Enter zum Senden, Shift+Enter fur neue Zeile"
@@ -423,9 +469,20 @@
     const text = dom.messageInput.value.trim();
     if (!text || state.isLoading) return;
 
-    // Check API Key
-    if (!state.settings.apiKey) {
-      showToast("Bitte API Key in den Einstellungen hinterlegen", "error");
+    const activeProfile = getActiveProfile();
+    if (!activeProfile) {
+      showToast("Bitte zuerst ein Profil in den Einstellungen anlegen", "error");
+      return;
+    }
+    if (!activeProfile.endpoint) {
+      showToast("Bitte Endpoint im aktiven Profil eintragen", "error");
+      return;
+    }
+    if (activeProfile.requiresApiKey && !activeProfile.apiKey) {
+      showToast(
+        "Bitte API Token/Key im aktiven Profil hinterlegen",
+        "error",
+      );
       return;
     }
 

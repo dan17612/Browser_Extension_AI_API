@@ -148,19 +148,79 @@
           <section id="section-api" class="settings-section active">
             <div class="section-header">
               <h2>API-Konfiguration</h2>
-              <p>Verbinde deine Perplexity API fur KI-gestutzte Antworten</p>
+              <p>Verwalte mehrere Profile fur Cloud- und lokale Anbieter</p>
+            </div>
+
+            <div class="setting-group">
+              <label class="setting-label" for="profile-select">
+                Aktives Profil
+              </label>
+              <div class="profile-toolbar">
+                <select id="profile-select" class="input"></select>
+                <button id="btn-new-profile" class="btn btn-secondary">
+                  Profil anlegen
+                </button>
+                <button id="btn-delete-profile" class="btn btn-danger-outline">
+                  Profil loschen
+                </button>
+              </div>
+              <span class="setting-hint"
+                >Jedes Profil hat eigene Zugangsdaten, Endpoint und
+                Modell.</span
+              >
+            </div>
+
+            <div class="setting-group">
+              <label class="setting-label" for="profile-name">Profilname</label>
+              <input
+                type="text"
+                id="profile-name"
+                class="input"
+                placeholder="z. B. OpenAI Arbeit, LM Studio lokal"
+                autocomplete="off"
+                spellcheck="false"
+              />
+            </div>
+
+            <div class="setting-group">
+              <label class="setting-label" for="provider">Anbieter</label>
+              <select id="provider" class="input">
+                <option value="perplexity">Perplexity</option>
+                <option value="openai">OpenAI</option>
+                <option value="anthropic">Anthropic</option>
+                <option value="lmstudio">LM Studio (lokal)</option>
+                <option value="ollama">Ollama (lokal)</option>
+                <option value="custom">Custom / OpenAI-kompatibel</option>
+              </select>
+              <span class="setting-hint"
+                >LM Studio und Ollama laufen typischerweise lokal ohne
+                API-Token.</span
+              >
+            </div>
+
+            <div class="setting-group">
+              <label class="setting-label" for="endpoint">API Endpoint</label>
+              <input
+                type="text"
+                id="endpoint"
+                class="input"
+                placeholder="https://api.example.com/v1/chat/completions"
+                autocomplete="off"
+                spellcheck="false"
+              />
             </div>
 
             <div class="setting-group">
               <label class="setting-label" for="api-key">
-                API Key
+                API Token / Key
                 <a
+                  id="provider-docs-link"
                   href="https://docs.perplexity.ai/docs/getting-started/overview"
                   target="_blank"
                   rel="noopener"
                   class="help-link"
                 >
-                  Wo bekomme ich einen Key?
+                  Doku
                   <svg
                     width="12"
                     height="12"
@@ -182,7 +242,7 @@
                   type="password"
                   id="api-key"
                   class="input"
-                  placeholder="pplx-xxxxxxxxxxxxxxxxxxxx"
+                  placeholder="Token fur den gewahlten Anbieter"
                   autocomplete="off"
                   spellcheck="false"
                 />
@@ -205,9 +265,8 @@
                   </svg>
                 </button>
               </div>
-              <span class="setting-hint"
-                >Dein API Key wird lokal in der Extension gespeichert und nie an
-                Dritte weitergegeben.</span
+              <span id="api-key-hint" class="setting-hint"
+                >Token wird lokal in der Extension gespeichert.</span
               >
             </div>
 
@@ -238,45 +297,15 @@
             </div>
 
             <div class="setting-group">
-              <label class="setting-label" for="model">Modell</label>
-              <div class="model-grid">
-                <label class="model-card">
-                  <input type="radio" name="model" value="sonar" />
-                  <div class="model-card-content">
-                    <strong>Sonar</strong>
-                    <span>Schnell & effizient</span>
-                    <span class="model-tag">Standard</span>
-                  </div>
-                </label>
-                <label class="model-card">
-                  <input type="radio" name="model" value="sonar-pro" />
-                  <div class="model-card-content">
-                    <strong>Sonar Pro</strong>
-                    <span>Hohere Qualitat</span>
-                    <span class="model-tag pro">Pro</span>
-                  </div>
-                </label>
-                <label class="model-card">
-                  <input type="radio" name="model" value="sonar-reasoning" />
-                  <div class="model-card-content">
-                    <strong>Sonar Reasoning</strong>
-                    <span>Logisches Denken</span>
-                    <span class="model-tag reasoning">Reasoning</span>
-                  </div>
-                </label>
-                <label class="model-card">
-                  <input
-                    type="radio"
-                    name="model"
-                    value="sonar-reasoning-pro"
-                  />
-                  <div class="model-card-content">
-                    <strong>Sonar Reasoning Pro</strong>
-                    <span>Beste Qualitat</span>
-                    <span class="model-tag pro">Top</span>
-                  </div>
-                </label>
-              </div>
+              <label class="setting-label" for="model-name">Modellname</label>
+              <input
+                type="text"
+                id="model-name"
+                class="input"
+                placeholder="z. B. sonar, gpt-4.1-mini, llama-3.1-8b-instruct"
+                autocomplete="off"
+                spellcheck="false"
+              />
             </div>
 
             <div class="setting-group">

@@ -287,6 +287,12 @@ body {
   flex: 1;
 }
 
+.profile-toolbar {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 8px;
+}
+
 /* Range Input */
 .range-input {
   width: 100%;
@@ -714,6 +720,9 @@ body {
 @media (max-width: 600px) {
   .container {
     padding: 16px;
+  }
+  .profile-toolbar {
+    grid-template-columns: 1fr;
   }
   .model-grid {
     grid-template-columns: 1fr;

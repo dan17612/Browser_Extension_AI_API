@@ -94,7 +94,13 @@
   function getDefaultSettings() {
     return {
       provider: "perplexity",
-      apiKeys: { perplexity: "", openai: "", anthropic: "", gemini: "" },
+      apiKeys: {
+        perplexity: "",
+        openai: "",
+        anthropic: "",
+        gemini: "",
+        lmstudio: "",
+      },
       baseUrls: {
         perplexity: "",
         openai: "",

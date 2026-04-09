@@ -7,7 +7,13 @@
 
   const DEFAULT_SETTINGS = {
     provider: "perplexity",
-    apiKeys: { perplexity: "", openai: "", anthropic: "", gemini: "" },
+    apiKeys: {
+      perplexity: "",
+      openai: "",
+      anthropic: "",
+      gemini: "",
+      lmstudio: "",
+    },
     baseUrls: {
       perplexity: "",
       openai: "",
@@ -41,8 +47,14 @@
       models: [
         { value: "sonar", label: "Sonar – Schnell & effizient" },
         { value: "sonar-pro", label: "Sonar Pro – Höhere Qualität" },
-        { value: "sonar-reasoning", label: "Sonar Reasoning – Logisches Denken" },
-        { value: "sonar-reasoning-pro", label: "Sonar Reasoning Pro – Beste Qualität" },
+        {
+          value: "sonar-reasoning",
+          label: "Sonar Reasoning – Logisches Denken",
+        },
+        {
+          value: "sonar-reasoning-pro",
+          label: "Sonar Reasoning Pro – Beste Qualität",
+        },
       ],
     },
     openai: {
@@ -61,9 +73,15 @@
       placeholder: "sk-ant-xxxxxxxxxxxxxxxxxxxx",
       helpUrl: "https://console.anthropic.com/settings/keys",
       models: [
-        { value: "claude-opus-4-6", label: "Claude Opus 4.6 – Stärkste Fähigkeiten" },
+        {
+          value: "claude-opus-4-6",
+          label: "Claude Opus 4.6 – Stärkste Fähigkeiten",
+        },
         { value: "claude-sonnet-4-6", label: "Claude Sonnet 4.6 – Ausgewogen" },
-        { value: "claude-haiku-4-5-20251001", label: "Claude Haiku 4.5 – Schnell & effizient" },
+        {
+          value: "claude-haiku-4-5-20251001",
+          label: "Claude Haiku 4.5 – Schnell & effizient",
+        },
       ],
     },
     gemini: {
@@ -71,15 +89,23 @@
       placeholder: "AIzaSy-xxxxxxxxxxxxxxxxxxxx",
       helpUrl: "https://aistudio.google.com/app/apikey",
       models: [
-        { value: "gemini-2.0-flash", label: "Gemini 2.0 Flash – Schnell & aktuell" },
+        {
+          value: "gemini-2.0-flash",
+          label: "Gemini 2.0 Flash – Schnell & aktuell",
+        },
         { value: "gemini-1.5-pro", label: "Gemini 1.5 Pro – Hohe Qualität" },
-        { value: "gemini-1.5-flash", label: "Gemini 1.5 Flash – Schnell & effizient" },
+        {
+          value: "gemini-1.5-flash",
+          label: "Gemini 1.5 Flash – Schnell & effizient",
+        },
       ],
     },
     lmstudio: {
-      keyLabel: null,
-      placeholder: null,
+      keyLabel: "LM Studio API Key (optional)",
+      placeholder: "lm-studio-key-optional",
       helpUrl: null,
+      keyHint:
+        "Optional. Wird nur gesendet, wenn dein LM-Studio-Server eine Authentifizierung erwartet.",
       models: [],
     },
   };
@@ -97,6 +123,7 @@
     apiKeyLabel: $("#api-key-label"),
     apiKeyHelp: $("#api-key-help"),
     apiKey: $("#api-key"),
+    apiKeyHint: $("#api-key-hint"),
     toggleKeyVis: $("#toggle-key-visibility"),
     lmStudioUrlGroup: $("#lmstudio-url-group"),
     lmStudioUrl: $("#lmstudio-url"),
@@ -140,7 +167,13 @@
     // Migrate legacy schema
     if (!settings.provider) {
       settings.provider = "perplexity";
-      settings.apiKeys = { perplexity: settings.apiKey || "", openai: "", anthropic: "", gemini: "" };
+      settings.apiKeys = {
+        perplexity: settings.apiKey || "",
+        openai: "",
+        anthropic: "",
+        gemini: "",
+        lmstudio: "",
+      };
       settings.models = {
         perplexity: settings.model || "sonar",
         openai: "gpt-4o-mini",
@@ -160,7 +193,10 @@
       delete settings.lmStudioUrl;
     }
     // Ensure nested objects exist
-    settings.apiKeys = settings.apiKeys || { perplexity: "", openai: "", anthropic: "", gemini: "" };
+    settings.apiKeys = {
+      ...DEFAULT_SETTINGS.apiKeys,
+      ...(settings.apiKeys || {}),
+    };
     settings.models = settings.models || DEFAULT_SETTINGS.models;
     settings.baseUrls = settings.baseUrls || { ...DEFAULT_SETTINGS.baseUrls };
   }
@@ -216,14 +252,18 @@
       settings.baseUrls?.lmstudio ||
       "http://localhost:1234"
     ).replace(/\/$/, "");
+    const apiKey = dom.apiKey.value.trim() || settings.apiKeys?.lmstudio || "";
 
     dom.btnLoadModels.disabled = true;
     dom.btnLoadModels.style.opacity = "0.5";
     dom.lmStudioModelHint.textContent = "Lade Modelle...";
 
     try {
-      const response = await fetch(`${baseUrl}/v1/models`);
-      if (!response.ok) throw new Error(`Server antwortete mit ${response.status}`);
+      const response = await fetch(`${baseUrl}/v1/models`, {
+        headers: apiKey ? { Authorization: `Bearer ${apiKey}` } : {},
+      });
+      if (!response.ok)
+        throw new Error(`Server antwortete mit ${response.status}`);
 
       const data = await response.json();
       const models = (data.data || []).map((m) => m.id).filter(Boolean);
@@ -264,10 +304,17 @@
 
     // API key group + URL groups
     if (isLmStudio) {
-      dom.apiKeyGroup.classList.add("hidden");
+      dom.apiKeyGroup.classList.remove("hidden");
       dom.lmStudioUrlGroup.classList.remove("hidden");
       dom.advancedUrlGroup.classList.add("hidden");
-      dom.lmStudioUrl.value = settings.baseUrls?.lmstudio || "http://localhost:1234";
+      dom.apiKeyLabel.textContent = cfg.keyLabel;
+      dom.apiKey.placeholder = cfg.placeholder;
+      dom.apiKey.type = "password";
+      dom.apiKey.value = settings.apiKeys?.lmstudio || "";
+      dom.apiKeyHint.textContent = cfg.keyHint;
+      dom.apiKeyHelp.style.display = "none";
+      dom.lmStudioUrl.value =
+        settings.baseUrls?.lmstudio || "http://localhost:1234";
     } else {
       dom.apiKeyGroup.classList.remove("hidden");
       dom.lmStudioUrlGroup.classList.add("hidden");
@@ -277,14 +324,17 @@
       dom.apiKey.placeholder = cfg.placeholder;
       dom.apiKey.type = "password";
       dom.apiKey.value = settings.apiKeys?.[provider] || "";
+      dom.apiKeyHint.textContent =
+        "Dein API Key wird lokal in der Extension gespeichert und nie an Dritte weitergegeben.";
       const storedUrl = settings.baseUrls?.[provider] || "";
       dom.baseUrl.value = storedUrl;
-      dom.baseUrl.placeholder = {
-        perplexity: "https://api.perplexity.ai",
-        openai: "https://api.openai.com",
-        anthropic: "https://api.anthropic.com",
-        gemini: "https://generativelanguage.googleapis.com",
-      }[provider] || "";
+      dom.baseUrl.placeholder =
+        {
+          perplexity: "https://api.perplexity.ai",
+          openai: "https://api.openai.com",
+          anthropic: "https://api.anthropic.com",
+          gemini: "https://generativelanguage.googleapis.com",
+        }[provider] || "";
       if (cfg.helpUrl) {
         dom.apiKeyHelp.href = cfg.helpUrl;
         dom.apiKeyHelp.style.display = "";
@@ -359,7 +409,8 @@
 
     // LM Studio URL
     dom.lmStudioUrl.addEventListener("change", () => {
-      settings.baseUrls.lmstudio = dom.lmStudioUrl.value.trim() || "http://localhost:1234";
+      settings.baseUrls.lmstudio =
+        dom.lmStudioUrl.value.trim() || "http://localhost:1234";
       saveSettings();
     });
 
@@ -453,7 +504,7 @@
   // ---- API Test ----
   async function testApi() {
     const provider = settings.provider || "perplexity";
-    const key = provider !== "lmstudio" ? dom.apiKey.value.trim() : null;
+    const key = dom.apiKey.value.trim();
 
     if (provider !== "lmstudio" && !key) {
       showTestResult("Bitte gib zuerst einen API Key ein.", "error");
@@ -470,24 +521,46 @@
       if (provider === "perplexity") {
         const r = await fetch("https://api.perplexity.ai/chat/completions", {
           method: "POST",
-          headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-          body: JSON.stringify({ model: "sonar", messages: [{ role: "user", content: "Hi" }], max_tokens: 5 }),
+          headers: {
+            Authorization: `Bearer ${key}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model: "sonar",
+            messages: [{ role: "user", content: "Hi" }],
+            max_tokens: 5,
+          }),
         });
         ok = r.ok;
         if (!ok) errMsg = await extractError(r);
       } else if (provider === "openai") {
         const r = await fetch("https://api.openai.com/v1/chat/completions", {
           method: "POST",
-          headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-          body: JSON.stringify({ model: "gpt-4o-mini", messages: [{ role: "user", content: "Hi" }], max_tokens: 5 }),
+          headers: {
+            Authorization: `Bearer ${key}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model: "gpt-4o-mini",
+            messages: [{ role: "user", content: "Hi" }],
+            max_tokens: 5,
+          }),
         });
         ok = r.ok;
         if (!ok) errMsg = await extractError(r);
       } else if (provider === "anthropic") {
         const r = await fetch("https://api.anthropic.com/v1/messages", {
           method: "POST",
-          headers: { "x-api-key": key, "anthropic-version": "2023-06-01", "Content-Type": "application/json" },
-          body: JSON.stringify({ model: "claude-haiku-4-5-20251001", max_tokens: 5, messages: [{ role: "user", content: "Hi" }] }),
+          headers: {
+            "x-api-key": key,
+            "anthropic-version": "2023-06-01",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model: "claude-haiku-4-5-20251001",
+            max_tokens: 5,
+            messages: [{ role: "user", content: "Hi" }],
+          }),
         });
         ok = r.ok;
         if (!ok) errMsg = await extractError(r);
@@ -498,20 +571,35 @@
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: "Hi" }] }], generationConfig: { maxOutputTokens: 5 } }),
+            body: JSON.stringify({
+              contents: [{ role: "user", parts: [{ text: "Hi" }] }],
+              generationConfig: { maxOutputTokens: 5 },
+            }),
           },
         );
         ok = r.ok;
         if (!ok) errMsg = await extractError(r);
       } else if (provider === "lmstudio") {
-        const baseUrl = (dom.lmStudioUrl.value.trim() || settings.baseUrls?.lmstudio || "http://localhost:1234").replace(/\/$/, "");
-        const r = await fetch(`${baseUrl}/v1/models`);
+        const baseUrl = (
+          dom.lmStudioUrl.value.trim() ||
+          settings.baseUrls?.lmstudio ||
+          "http://localhost:1234"
+        ).replace(/\/$/, "");
+        const headers = key ? { Authorization: `Bearer ${key}` } : {};
+        const r = await fetch(`${baseUrl}/v1/models`, { headers });
         ok = r.ok;
         if (!ok) errMsg = `Server nicht erreichbar (${r.status})`;
       }
 
       if (ok) {
-        showTestResult("Verbindung erfolgreich! API Key ist gültig.", "success");
+        showTestResult(
+          provider === "lmstudio"
+            ? key
+              ? "Verbindung erfolgreich. Optionaler API Key wurde akzeptiert."
+              : "Verbindung erfolgreich. LM Studio ist ohne API Key erreichbar."
+            : "Verbindung erfolgreich! API Key ist gültig.",
+          "success",
+        );
       } else {
         showTestResult(`Fehler: ${errMsg}`, "error");
       }
@@ -580,7 +668,11 @@
 
   async function resetSettings() {
     if (!confirm("Einstellungen wirklich zurücksetzen?")) return;
-    settings = { ...DEFAULT_SETTINGS, apiKeys: { ...DEFAULT_SETTINGS.apiKeys }, models: { ...DEFAULT_SETTINGS.models } };
+    settings = {
+      ...DEFAULT_SETTINGS,
+      apiKeys: { ...DEFAULT_SETTINGS.apiKeys },
+      models: { ...DEFAULT_SETTINGS.models },
+    };
     await saveSettings();
     populateUI();
     alert("Einstellungen wurden zurückgesetzt.");

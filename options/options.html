@@ -148,11 +148,15 @@
           <section id="section-api" class="settings-section active">
             <div class="section-header">
               <h2>API-Konfiguration</h2>
-              <p>Wahle deinen KI-Anbieter und konfiguriere den API Key</p>
+              <p>
+                Wahle deinen KI-Anbieter und konfiguriere API Key und Verbindung
+              </p>
             </div>
 
             <div class="setting-group">
-              <label class="setting-label" for="provider-select">KI-Anbieter</label>
+              <label class="setting-label" for="provider-select"
+                >KI-Anbieter</label
+              >
               <select id="provider-select" class="input">
                 <option value="perplexity">Perplexity</option>
                 <option value="openai">ChatGPT (OpenAI)</option>
@@ -217,7 +221,7 @@
                   </svg>
                 </button>
               </div>
-              <span class="setting-hint"
+              <span class="setting-hint" id="api-key-hint"
                 >Dein API Key wird lokal in der Extension gespeichert und nie an
                 Dritte weitergegeben.</span
               >

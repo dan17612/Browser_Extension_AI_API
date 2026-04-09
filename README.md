@@ -37,7 +37,7 @@ Moderne Browser-Extension fur KI-Chat mit mehreren Providern in einer einheitlic
 
 1. Extension offnen.
 2. Auf Einstellungen gehen und Provider auswahlen.
-3. API-Key hinterlegen (bei LM Studio kein API-Key notwendig).
+3. API-Key hinterlegen. Bei LM Studio ist er optional.
 4. Optional Modell und Base-URL anpassen.
 5. Im Chat eine Nachricht senden.
 
@@ -45,6 +45,7 @@ Moderne Browser-Extension fur KI-Chat mit mehreren Providern in einer einheitlic
 
 - LM Studio:
   - Standard-URL ist `http://localhost:1234`
+  - Ein API-Key kann optional gesetzt werden, falls dein lokaler Server Authentifizierung verlangt
   - Stelle sicher, dass LM Studio lauft und ein Modell geladen ist
 
 ## Entwicklung

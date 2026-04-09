@@ -2,7 +2,13 @@
 
 const DEFAULT_SETTINGS = {
   provider: "perplexity",
-  apiKeys: { perplexity: "", openai: "", anthropic: "", gemini: "" },
+  apiKeys: {
+    perplexity: "",
+    openai: "",
+    anthropic: "",
+    gemini: "",
+    lmstudio: "",
+  },
   baseUrls: {
     perplexity: "",
     openai: "",
@@ -38,7 +44,13 @@ chrome.runtime.onInstalled.addListener(async () => {
     const s = existing.settings;
     if (!s.provider) {
       s.provider = "perplexity";
-      s.apiKeys = { perplexity: s.apiKey || "", openai: "", anthropic: "", gemini: "" };
+      s.apiKeys = {
+        perplexity: s.apiKey || "",
+        openai: "",
+        anthropic: "",
+        gemini: "",
+        lmstudio: "",
+      };
       s.models = {
         perplexity: s.model || "sonar",
         openai: "gpt-4o-mini",
@@ -58,6 +70,10 @@ chrome.runtime.onInstalled.addListener(async () => {
       delete s.lmStudioUrl;
       await chrome.storage.local.set({ settings: s });
     }
+    s.apiKeys = {
+      ...DEFAULT_SETTINGS.apiKeys,
+      ...(s.apiKeys || {}),
+    };
   }
   const convos = await chrome.storage.local.get("conversations");
   if (!convos.conversations) {
@@ -87,7 +103,8 @@ async function handleChat(request, sendResponse) {
     const s =
       (await chrome.storage.local.get("settings")).settings || DEFAULT_SETTINGS;
     const provider = s.provider || "perplexity";
-    const apiKey = s.apiKeys?.[provider] || s.apiKey || "";
+    const apiKey =
+      s.apiKeys?.[provider] || (provider !== "lmstudio" ? s.apiKey || "" : "");
     const model = s.models?.[provider] || s.model || "";
 
     if (provider !== "lmstudio" && !apiKey) {
@@ -109,7 +126,7 @@ async function handleChat(request, sendResponse) {
         await callGemini(s, apiKey, model, request, sendResponse);
         break;
       case "lmstudio":
-        await callLMStudio(s, model, request, sendResponse);
+        await callLMStudio(s, apiKey, model, request, sendResponse);
         break;
       default:
         await callPerplexity(s, apiKey, model, request, sendResponse);
@@ -121,14 +138,18 @@ async function handleChat(request, sendResponse) {
 
 function buildMessages(s, requestMessages) {
   const messages = [];
-  if (s.systemPrompt) messages.push({ role: "system", content: s.systemPrompt });
+  if (s.systemPrompt)
+    messages.push({ role: "system", content: s.systemPrompt });
   messages.push(...requestMessages);
   return messages;
 }
 
 async function callPerplexity(s, apiKey, model, request, sendResponse) {
   const messages = buildMessages(s, request.messages);
-  const base = (s.baseUrls?.perplexity || "https://api.perplexity.ai").replace(/\/$/, "");
+  const base = (s.baseUrls?.perplexity || "https://api.perplexity.ai").replace(
+    /\/$/,
+    "",
+  );
   const response = await fetch(`${base}/chat/completions`, {
     method: "POST",
     headers: {
@@ -160,7 +181,10 @@ async function callPerplexity(s, apiKey, model, request, sendResponse) {
 
 async function callOpenAI(s, apiKey, model, request, sendResponse) {
   const messages = buildMessages(s, request.messages);
-  const base = (s.baseUrls?.openai || "https://api.openai.com").replace(/\/$/, "");
+  const base = (s.baseUrls?.openai || "https://api.openai.com").replace(
+    /\/$/,
+    "",
+  );
   const response = await fetch(`${base}/v1/chat/completions`, {
     method: "POST",
     headers: {
@@ -191,7 +215,10 @@ async function callAnthropic(s, apiKey, model, request, sendResponse) {
   const body = { model, max_tokens: s.maxTokens, messages };
   if (s.systemPrompt) body.system = s.systemPrompt;
 
-  const base = (s.baseUrls?.anthropic || "https://api.anthropic.com").replace(/\/$/, "");
+  const base = (s.baseUrls?.anthropic || "https://api.anthropic.com").replace(
+    /\/$/,
+    "",
+  );
   const response = await fetch(`${base}/v1/messages`, {
     method: "POST",
     headers: {
@@ -229,7 +256,9 @@ async function callGemini(s, apiKey, model, request, sendResponse) {
     body.systemInstruction = { parts: [{ text: s.systemPrompt }] };
   }
 
-  const base = (s.baseUrls?.gemini || "https://generativelanguage.googleapis.com").replace(/\/$/, "");
+  const base = (
+    s.baseUrls?.gemini || "https://generativelanguage.googleapis.com"
+  ).replace(/\/$/, "");
   const response = await fetch(
     `${base}/v1beta/models/${model}:generateContent?key=${apiKey}`,
     {
@@ -251,8 +280,11 @@ async function callGemini(s, apiKey, model, request, sendResponse) {
   });
 }
 
-async function callLMStudio(s, model, request, sendResponse) {
-  const baseUrl = (s.baseUrls?.lmstudio || "http://localhost:1234").replace(/\/$/, "");
+async function callLMStudio(s, apiKey, model, request, sendResponse) {
+  const baseUrl = (s.baseUrls?.lmstudio || "http://localhost:1234").replace(
+    /\/$/,
+    "",
+  );
   const messages = buildMessages(s, request.messages);
   const body = {
     messages,
@@ -264,7 +296,10 @@ async function callLMStudio(s, model, request, sendResponse) {
 
   const response = await fetch(`${baseUrl}/v1/chat/completions`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}),
+    },
     body: JSON.stringify(body),
   });
   if (!response.ok) {

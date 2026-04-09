@@ -310,6 +310,37 @@
               <select id="model-select" class="input"></select>
             </div>
 
+            <div class="setting-group">
+              <button id="btn-check-models" class="btn btn-secondary">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                  <polyline points="22 4 12 14.01 9 11.01"/>
+                </svg>
+                Modelle prüfen
+              </button>
+              <div id="model-check-results" class="model-check-results"></div>
+            </div>
+
+            <div class="setting-group">
+              <label class="setting-label">Modell manuell hinzufügen</label>
+              <div class="input-with-action">
+                <input
+                  type="text"
+                  id="custom-model-input"
+                  class="input"
+                  placeholder="z.B. gpt-5, gemini-3.1-flash"
+                  autocomplete="off"
+                  spellcheck="false"
+                />
+                <button id="btn-add-model" class="btn btn-primary" title="Hinzufügen">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                  </svg>
+                </button>
+              </div>
+              <div id="custom-model-list" class="custom-model-list"></div>
+            </div>
+
             <div class="setting-group hidden" id="lmstudio-model-group">
               <label class="setting-label">Modell</label>
               <div class="input-with-action">

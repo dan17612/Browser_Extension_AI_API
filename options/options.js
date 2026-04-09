@@ -25,8 +25,15 @@
       perplexity: "sonar",
       openai: "gpt-4o-mini",
       anthropic: "claude-sonnet-4-6",
-      gemini: "gemini-2.0-flash",
+      gemini: "gemini-2.5-flash",
       lmstudio: "",
+    },
+    customModels: {
+      perplexity: [],
+      openai: [],
+      anthropic: [],
+      gemini: [],
+      lmstudio: [],
     },
     temperature: 0.7,
     maxTokens: 2048,
@@ -89,15 +96,13 @@
       placeholder: "AIzaSy-xxxxxxxxxxxxxxxxxxxx",
       helpUrl: "https://aistudio.google.com/app/apikey",
       models: [
-        {
-          value: "gemini-2.0-flash",
-          label: "Gemini 2.0 Flash – Schnell & aktuell",
-        },
-        { value: "gemini-1.5-pro", label: "Gemini 1.5 Pro – Hohe Qualität" },
-        {
-          value: "gemini-1.5-flash",
-          label: "Gemini 1.5 Flash – Schnell & effizient",
-        },
+        { value: "gemini-2.5-flash",            label: "Gemini 2.5 Flash – Kostenlos, empfohlen" },
+        { value: "gemini-2.5-flash-lite",        label: "Gemini 2.5 Flash Lite – Kostenlos, schnellstes" },
+        { value: "gemini-2.5-pro",              label: "Gemini 2.5 Pro – Kostenlos, leistungsstärkstes" },
+        { value: "gemini-2.0-flash",            label: "Gemini 2.0 Flash – Stabil" },
+        { value: "gemini-3-flash-preview",       label: "Gemini 3 Flash – Preview" },
+        { value: "gemini-3.1-flash-lite-preview", label: "Gemini 3.1 Flash Lite – Preview" },
+        { value: "gemini-3.1-pro-preview",       label: "Gemini 3.1 Pro – Preview" },
       ],
     },
     lmstudio: {
@@ -136,6 +141,11 @@
     lmStudioModel: $("#lmstudio-model"),
     lmStudioModelHint: $("#lmstudio-model-hint"),
     btnLoadModels: $("#btn-load-models"),
+    btnCheckModels: $("#btn-check-models"),
+    modelCheckResults: $("#model-check-results"),
+    customModelInput: $("#custom-model-input"),
+    btnAddModel: $("#btn-add-model"),
+    customModelList: $("#custom-model-list"),
     temperature: $("#temperature"),
     temperatureValue: $("#temperature-value"),
     maxTokens: $("#max-tokens"),
@@ -178,7 +188,7 @@
         perplexity: settings.model || "sonar",
         openai: "gpt-4o-mini",
         anthropic: "claude-sonnet-4-6",
-        gemini: "gemini-2.0-flash",
+        gemini: "gemini-2.5-flash",
         lmstudio: "",
       };
     }
@@ -199,6 +209,9 @@
     };
     settings.models = settings.models || DEFAULT_SETTINGS.models;
     settings.baseUrls = settings.baseUrls || { ...DEFAULT_SETTINGS.baseUrls };
+    settings.customModels = settings.customModels || {
+      perplexity: [], openai: [], anthropic: [], gemini: [], lmstudio: [],
+    };
   }
 
   async function saveSettings() {
@@ -357,12 +370,52 @@
     } else {
       dom.modelSelect.classList.remove("hidden");
       dom.lmStudioModelGroup.classList.add("hidden");
-      dom.modelSelect.innerHTML = cfg.models
-        .map((m) => `<option value="${m.value}">${m.label}</option>`)
-        .join("");
-      dom.modelSelect.value =
-        settings.models?.[provider] || cfg.models[0]?.value || "";
+      rebuildModelSelect(provider);
+      dom.modelCheckResults.innerHTML = "";
     }
+  }
+
+  function rebuildModelSelect(provider) {
+    const cfg = PROVIDER_CONFIG[provider];
+    const custom = (settings.customModels?.[provider] || []).map((id) => ({
+      value: id,
+      label: id,
+    }));
+    const all = [...cfg.models, ...custom];
+    dom.modelSelect.innerHTML = all
+      .map((m) => `<option value="${m.value}">${m.label}</option>`)
+      .join("");
+    dom.modelSelect.value =
+      settings.models?.[provider] || cfg.models[0]?.value || "";
+    renderCustomModels(provider);
+  }
+
+  function renderCustomModels(provider) {
+    const custom = settings.customModels?.[provider] || [];
+    dom.customModelList.innerHTML = custom
+      .map(
+        (id) => `
+      <span class="custom-model-tag">
+        ${escapeHtml(id)}
+        <button class="custom-model-remove" data-id="${escapeHtml(id)}" title="Entfernen">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </span>`,
+      )
+      .join("");
+    dom.customModelList.querySelectorAll(".custom-model-remove").forEach((btn) => {
+      btn.addEventListener("click", () => removeCustomModel(provider, btn.dataset.id));
+    });
+  }
+
+  function escapeHtml(str) {
+    return String(str)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
   }
 
   function applyTheme() {
@@ -437,6 +490,15 @@
 
     // Load models button
     dom.btnLoadModels.addEventListener("click", loadLmStudioModels);
+
+    // Check models button
+    dom.btnCheckModels.addEventListener("click", checkAllModels);
+
+    // Custom model input
+    dom.btnAddModel.addEventListener("click", addCustomModel);
+    dom.customModelInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") addCustomModel();
+    });
 
     // Temperature
     dom.temperature.addEventListener("input", () => {
@@ -565,7 +627,7 @@
         ok = r.ok;
         if (!ok) errMsg = await extractError(r);
       } else if (provider === "gemini") {
-        const model = "gemini-2.0-flash";
+        const model = "gemini-2.5-flash";
         const r = await fetch(
           `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`,
           {
@@ -676,6 +738,128 @@
     await saveSettings();
     populateUI();
     alert("Einstellungen wurden zurückgesetzt.");
+  }
+
+  // ---- Custom Models ----
+  function addCustomModel() {
+    const provider = settings.provider;
+    const id = dom.customModelInput.value.trim();
+    if (!id) return;
+    if (!settings.customModels[provider]) settings.customModels[provider] = [];
+    if (settings.customModels[provider].includes(id)) {
+      dom.customModelInput.value = "";
+      return;
+    }
+    settings.customModels[provider].push(id);
+    saveSettings();
+    dom.customModelInput.value = "";
+    rebuildModelSelect(provider);
+    // Auto-select the new model
+    dom.modelSelect.value = id;
+    settings.models[provider] = id;
+    saveSettings();
+  }
+
+  function removeCustomModel(provider, id) {
+    settings.customModels[provider] = (settings.customModels[provider] || []).filter(
+      (m) => m !== id,
+    );
+    // If the removed model was selected, fall back to first built-in
+    if (settings.models[provider] === id) {
+      settings.models[provider] = PROVIDER_CONFIG[provider].models[0]?.value || "";
+    }
+    saveSettings();
+    rebuildModelSelect(provider);
+    dom.modelSelect.value = settings.models[provider];
+  }
+
+  // ---- Model Health Check ----
+  async function checkAllModels() {
+    const provider = settings.provider;
+    if (provider === "lmstudio") return;
+    const apiKey = settings.apiKeys?.[provider] || "";
+    if (!apiKey) {
+      dom.modelCheckResults.innerHTML =
+        '<span class="check-hint">Bitte zuerst API Key eingeben.</span>';
+      return;
+    }
+
+    const cfg = PROVIDER_CONFIG[provider];
+    const custom = (settings.customModels?.[provider] || []).map((id) => ({
+      value: id,
+      label: id,
+    }));
+    const allModels = [...cfg.models, ...custom];
+
+    dom.btnCheckModels.disabled = true;
+    dom.modelCheckResults.innerHTML = allModels
+      .map(
+        (m) => `
+      <div class="check-item" data-model="${escapeHtml(m.value)}">
+        <span class="check-spinner"></span>
+        <span class="check-label">${escapeHtml(m.label || m.value)}</span>
+      </div>`,
+      )
+      .join("");
+
+    for (const model of allModels) {
+      const row = dom.modelCheckResults.querySelector(
+        `[data-model="${CSS.escape(model.value)}"]`,
+      );
+      const ok = await probeModel(provider, apiKey, model.value);
+      const spinnerEl = row?.querySelector(".check-spinner");
+      if (spinnerEl) {
+        spinnerEl.outerHTML = ok
+          ? `<svg class="check-icon ok" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>`
+          : `<svg class="check-icon fail" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`;
+      }
+    }
+    dom.btnCheckModels.disabled = false;
+  }
+
+  async function probeModel(provider, apiKey, modelId) {
+    try {
+      const baseUrls = settings.baseUrls || {};
+      if (provider === "perplexity") {
+        const base = (baseUrls.perplexity || "https://api.perplexity.ai").replace(/\/$/, "");
+        const r = await fetch(`${base}/chat/completions`, {
+          method: "POST",
+          headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ model: modelId, messages: [{ role: "user", content: "Hi" }], max_tokens: 1 }),
+        });
+        return r.ok;
+      } else if (provider === "openai") {
+        const base = (baseUrls.openai || "https://api.openai.com").replace(/\/$/, "");
+        const r = await fetch(`${base}/v1/chat/completions`, {
+          method: "POST",
+          headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ model: modelId, messages: [{ role: "user", content: "Hi" }], max_tokens: 1 }),
+        });
+        return r.ok;
+      } else if (provider === "anthropic") {
+        const base = (baseUrls.anthropic || "https://api.anthropic.com").replace(/\/$/, "");
+        const r = await fetch(`${base}/v1/messages`, {
+          method: "POST",
+          headers: { "x-api-key": apiKey, "anthropic-version": "2023-06-01", "Content-Type": "application/json" },
+          body: JSON.stringify({ model: modelId, max_tokens: 1, messages: [{ role: "user", content: "Hi" }] }),
+        });
+        return r.ok;
+      } else if (provider === "gemini") {
+        const base = (baseUrls.gemini || "https://generativelanguage.googleapis.com").replace(/\/$/, "");
+        const r = await fetch(
+          `${base}/v1beta/models/${modelId}:generateContent?key=${apiKey}`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: "Hi" }] }], generationConfig: { maxOutputTokens: 1 } }),
+          },
+        );
+        return r.ok;
+      }
+      return false;
+    } catch {
+      return false;
+    }
   }
 
   // ---- Start ----

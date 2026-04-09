@@ -41,6 +41,9 @@
     searchChats: $("#search-chats"),
     exportModal: $("#export-modal"),
     deleteModal: $("#delete-modal"),
+    renameModal: $("#rename-modal"),
+    renameInput: $("#rename-input"),
+    confirmRename: $("#confirm-rename"),
     toastContainer: $("#toast-container"),
   };
 
@@ -112,7 +115,7 @@
         perplexity: "sonar",
         openai: "gpt-4o-mini",
         anthropic: "claude-sonnet-4-6",
-        gemini: "gemini-2.0-flash",
+        gemini: "gemini-2.5-flash",
         lmstudio: "",
       },
       temperature: 0.7,
@@ -212,6 +215,13 @@
       toggleModal(dom.deleteModal, true),
     );
     $("#confirm-delete").addEventListener("click", deleteActiveChat);
+
+    // Rename modal
+    dom.confirmRename.addEventListener("click", confirmRename);
+    dom.renameInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") confirmRename();
+      if (e.key === "Escape") toggleModal(dom.renameModal, false);
+    });
 
     // Edit title
     dom.btnEditTitle.addEventListener("click", editChatTitle);
@@ -328,16 +338,41 @@
     showToast("Chat geloscht", "success");
   }
 
+  // ---- Rename ----
+  let _renameTargetId = null;
+
+  function openRenameModal(convId) {
+    const conv = state.conversations.find((c) => c.id === convId);
+    if (!conv) return;
+    _renameTargetId = convId;
+    dom.renameInput.value = conv.title;
+    toggleModal(dom.renameModal, true);
+    setTimeout(() => {
+      dom.renameInput.focus();
+      dom.renameInput.select();
+    }, 50);
+  }
+
+  function confirmRename() {
+    const newTitle = dom.renameInput.value.trim();
+    if (!newTitle || !_renameTargetId) return;
+    const conv = state.conversations.find((c) => c.id === _renameTargetId);
+    if (conv) {
+      conv.title = newTitle;
+      saveState();
+      renderConversationList();
+      if (_renameTargetId === state.activeConversationId) {
+        dom.chatTitle.textContent = newTitle;
+      }
+    }
+    toggleModal(dom.renameModal, false);
+    _renameTargetId = null;
+  }
+
   function editChatTitle() {
     const conv = getActiveConversation();
     if (!conv) return;
-    const newTitle = prompt("Chat-Titel:", conv.title);
-    if (newTitle && newTitle.trim()) {
-      conv.title = newTitle.trim();
-      saveState();
-      renderConversationList();
-      dom.chatTitle.textContent = conv.title;
-    }
+    openRenameModal(conv.id);
   }
 
   // ---- Render ----
@@ -364,12 +399,20 @@
           <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
         </svg>
         <span class="conv-title">${escapeHtml(conv.title)}</span>
-        <button class="conv-delete" data-id="${conv.id}" title="Loschen">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="18" y1="6" x2="6" y2="18"></line>
-            <line x1="6" y1="6" x2="18" y2="18"></line>
-          </svg>
-        </button>
+        <div class="conv-actions">
+          <button class="conv-rename" data-id="${conv.id}" title="Umbenennen">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+            </svg>
+          </button>
+          <button class="conv-delete" data-id="${conv.id}" title="Loschen">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
       </div>
     `,
       )
@@ -384,6 +427,13 @@
           switchToChat(item.dataset.id);
         });
       });
+
+    dom.conversationList.querySelectorAll(".conv-rename").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        openRenameModal(btn.dataset.id);
+      });
+    });
 
     dom.conversationList.querySelectorAll(".conv-delete").forEach((btn) => {
       btn.addEventListener("click", (e) => {

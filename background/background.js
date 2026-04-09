@@ -20,7 +20,7 @@ const DEFAULT_SETTINGS = {
     perplexity: "sonar",
     openai: "gpt-4o-mini",
     anthropic: "claude-sonnet-4-6",
-    gemini: "gemini-2.0-flash",
+    gemini: "gemini-2.5-flash",
     lmstudio: "",
   },
   temperature: 0.7,

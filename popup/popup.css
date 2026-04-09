@@ -248,9 +248,21 @@ body {
   white-space: nowrap;
 }
 
-.conversation-item .conv-delete {
+.conversation-item .conv-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
   opacity: 0;
   transition: opacity var(--transition);
+  flex-shrink: 0;
+}
+
+.conversation-item:hover .conv-actions {
+  opacity: 1;
+}
+
+.conversation-item .conv-rename,
+.conversation-item .conv-delete {
   color: var(--color-text-tertiary);
   background: none;
   border: none;
@@ -261,9 +273,10 @@ body {
   align-items: center;
 }
 
-.conversation-item:hover .conv-delete {
-  opacity: 1;
+.conversation-item .conv-rename:hover {
+  color: var(--color-accent);
 }
+
 .conversation-item .conv-delete:hover {
   color: var(--color-danger);
 }

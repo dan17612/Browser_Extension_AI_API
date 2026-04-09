@@ -35,11 +35,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     handleChat(request, sendResponse);
     return true; // Keep channel open for async response
   }
-  if (request.type === "chat-stream") {
-    handleStreamChat(request, sender.tab);
-    sendResponse({ status: "streaming" });
-    return false;
-  }
   if (request.type === "getSettings") {
     chrome.storage.local.get("settings").then((data) => {
       sendResponse(data.settings || DEFAULT_SETTINGS);

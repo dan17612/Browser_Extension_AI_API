@@ -116,6 +116,8 @@
           : "light"
         : settings.theme;
     dom.app.className = `theme-${theme}`;
+    document.body.className = `theme-${theme}`;
+    localStorage.setItem("ai-chat-theme", theme);
   }
 
   // ---- Events ----

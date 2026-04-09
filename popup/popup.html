@@ -4,6 +4,15 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>AI Chat Pro</title>
+    <script>
+      (function () {
+        var t = localStorage.getItem("ai-chat-theme") || "dark";
+        document.documentElement.className = "theme-" + t;
+        document.addEventListener("DOMContentLoaded", function () {
+          document.body.className = "theme-" + t;
+        });
+      })();
+    </script>
     <link rel="stylesheet" href="popup.css" />
   </head>
   <body>

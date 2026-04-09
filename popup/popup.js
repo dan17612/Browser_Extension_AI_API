@@ -91,7 +91,10 @@
   function applySettings() {
     const s = state.settings;
     // Theme
-    dom.app.className = `theme-${s.theme === "system" ? getSystemTheme() : s.theme}`;
+    const resolvedTheme = s.theme === "system" ? getSystemTheme() : s.theme;
+    dom.app.className = `theme-${resolvedTheme}`;
+    document.body.className = `theme-${resolvedTheme}`;
+    localStorage.setItem("ai-chat-theme", resolvedTheme);
     // Font size
     document.documentElement.style.setProperty(
       "--font-size",

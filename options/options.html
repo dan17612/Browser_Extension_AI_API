@@ -1,0 +1,513 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Chat Pro - Einstellungen</title>
+    <link rel="stylesheet" href="options.css" />
+  </head>
+  <body>
+    <div id="app" class="theme-dark">
+      <div class="container">
+        <!-- Header -->
+        <header class="page-header">
+          <div class="header-left">
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path
+                d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
+              ></path>
+            </svg>
+            <h1>AI Chat Pro <span class="version">v1.0.0</span></h1>
+          </div>
+          <div class="header-right">
+            <span id="save-status" class="save-status hidden">
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+              Gespeichert
+            </span>
+          </div>
+        </header>
+
+        <!-- Navigation -->
+        <nav class="settings-nav">
+          <button class="nav-item active" data-section="api">
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path
+                d="M15 7h3a5 5 0 0 1 5 5 5 5 0 0 1-5 5h-3m-6 0H6a5 5 0 0 1-5-5 5 5 0 0 1 5-5h3"
+              />
+              <line x1="8" y1="12" x2="16" y2="12" />
+            </svg>
+            API
+          </button>
+          <button class="nav-item" data-section="model">
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <circle cx="12" cy="12" r="3" />
+              <path
+                d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"
+              />
+            </svg>
+            Modell
+          </button>
+          <button class="nav-item" data-section="appearance">
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <circle cx="12" cy="12" r="5" />
+              <line x1="12" y1="1" x2="12" y2="3" />
+              <line x1="12" y1="21" x2="12" y2="23" />
+              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+              <line x1="1" y1="12" x2="3" y2="12" />
+              <line x1="21" y1="12" x2="23" y2="12" />
+              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+            </svg>
+            Darstellung
+          </button>
+          <button class="nav-item" data-section="behavior">
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <circle cx="12" cy="12" r="3" />
+              <path
+                d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"
+              />
+            </svg>
+            Verhalten
+          </button>
+          <button class="nav-item" data-section="data">
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="17 8 12 3 7 8" />
+              <line x1="12" y1="3" x2="12" y2="15" />
+            </svg>
+            Daten
+          </button>
+        </nav>
+
+        <!-- Settings Sections -->
+        <div class="settings-body">
+          <!-- API Section -->
+          <section id="section-api" class="settings-section active">
+            <div class="section-header">
+              <h2>API-Konfiguration</h2>
+              <p>Verbinde deine Perplexity API fur KI-gestutzte Antworten</p>
+            </div>
+
+            <div class="setting-group">
+              <label class="setting-label" for="api-key">
+                API Key
+                <a
+                  href="https://docs.perplexity.ai/docs/getting-started/overview"
+                  target="_blank"
+                  rel="noopener"
+                  class="help-link"
+                >
+                  Wo bekomme ich einen Key?
+                  <svg
+                    width="12"
+                    height="12"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path
+                      d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"
+                    />
+                    <polyline points="15 3 21 3 21 9" />
+                    <line x1="10" y1="14" x2="21" y2="3" />
+                  </svg>
+                </a>
+              </label>
+              <div class="input-with-action">
+                <input
+                  type="password"
+                  id="api-key"
+                  class="input"
+                  placeholder="pplx-xxxxxxxxxxxxxxxxxxxx"
+                  autocomplete="off"
+                  spellcheck="false"
+                />
+                <button
+                  id="toggle-key-visibility"
+                  class="btn-icon"
+                  title="Key anzeigen/verbergen"
+                >
+                  <svg
+                    id="eye-icon"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                    <circle cx="12" cy="12" r="3" />
+                  </svg>
+                </button>
+              </div>
+              <span class="setting-hint"
+                >Dein API Key wird lokal in der Extension gespeichert und nie an
+                Dritte weitergegeben.</span
+              >
+            </div>
+
+            <div class="setting-group">
+              <label class="setting-label">Verbindungstest</label>
+              <button id="btn-test-api" class="btn btn-primary">
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+                API testen
+              </button>
+              <div id="api-test-result" class="test-result hidden"></div>
+            </div>
+          </section>
+
+          <!-- Model Section -->
+          <section id="section-model" class="settings-section">
+            <div class="section-header">
+              <h2>Modell-Einstellungen</h2>
+              <p>Wahle das KI-Modell und passe die Parameter an</p>
+            </div>
+
+            <div class="setting-group">
+              <label class="setting-label" for="model">Modell</label>
+              <div class="model-grid">
+                <label class="model-card">
+                  <input type="radio" name="model" value="sonar" />
+                  <div class="model-card-content">
+                    <strong>Sonar</strong>
+                    <span>Schnell & effizient</span>
+                    <span class="model-tag">Standard</span>
+                  </div>
+                </label>
+                <label class="model-card">
+                  <input type="radio" name="model" value="sonar-pro" />
+                  <div class="model-card-content">
+                    <strong>Sonar Pro</strong>
+                    <span>Hohere Qualitat</span>
+                    <span class="model-tag pro">Pro</span>
+                  </div>
+                </label>
+                <label class="model-card">
+                  <input type="radio" name="model" value="sonar-reasoning" />
+                  <div class="model-card-content">
+                    <strong>Sonar Reasoning</strong>
+                    <span>Logisches Denken</span>
+                    <span class="model-tag reasoning">Reasoning</span>
+                  </div>
+                </label>
+                <label class="model-card">
+                  <input
+                    type="radio"
+                    name="model"
+                    value="sonar-reasoning-pro"
+                  />
+                  <div class="model-card-content">
+                    <strong>Sonar Reasoning Pro</strong>
+                    <span>Beste Qualitat</span>
+                    <span class="model-tag pro">Top</span>
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            <div class="setting-group">
+              <label class="setting-label" for="temperature">
+                Temperature
+                <span class="setting-value" id="temperature-value">0.7</span>
+              </label>
+              <input
+                type="range"
+                id="temperature"
+                class="range-input"
+                min="0"
+                max="2"
+                step="0.1"
+                value="0.7"
+              />
+              <div class="range-labels">
+                <span>Prazise</span>
+                <span>Kreativ</span>
+              </div>
+            </div>
+
+            <div class="setting-group">
+              <label class="setting-label" for="max-tokens">
+                Max. Tokens
+                <span class="setting-value" id="max-tokens-value">2048</span>
+              </label>
+              <input
+                type="range"
+                id="max-tokens"
+                class="range-input"
+                min="256"
+                max="4096"
+                step="256"
+                value="2048"
+              />
+              <div class="range-labels">
+                <span>256</span>
+                <span>4096</span>
+              </div>
+            </div>
+
+            <div class="setting-group">
+              <label class="setting-label" for="system-prompt"
+                >System Prompt</label
+              >
+              <textarea
+                id="system-prompt"
+                class="input textarea"
+                rows="4"
+                placeholder="Definiere das Verhalten der KI..."
+              ></textarea>
+              <span class="setting-hint"
+                >Gib der KI eine Rolle oder spezifische Anweisungen.</span
+              >
+            </div>
+          </section>
+
+          <!-- Appearance Section -->
+          <section id="section-appearance" class="settings-section">
+            <div class="section-header">
+              <h2>Darstellung</h2>
+              <p>Passe das Design nach deinen Wunschen an</p>
+            </div>
+
+            <div class="setting-group">
+              <label class="setting-label">Theme</label>
+              <div class="theme-picker">
+                <label class="theme-option">
+                  <input type="radio" name="theme" value="dark" />
+                  <div class="theme-preview dark-preview">
+                    <div class="preview-header"></div>
+                    <div class="preview-body">
+                      <div class="preview-msg"></div>
+                      <div class="preview-msg reply"></div>
+                    </div>
+                  </div>
+                  <span>Dark</span>
+                </label>
+                <label class="theme-option">
+                  <input type="radio" name="theme" value="light" />
+                  <div class="theme-preview light-preview">
+                    <div class="preview-header"></div>
+                    <div class="preview-body">
+                      <div class="preview-msg"></div>
+                      <div class="preview-msg reply"></div>
+                    </div>
+                  </div>
+                  <span>Light</span>
+                </label>
+                <label class="theme-option">
+                  <input type="radio" name="theme" value="system" />
+                  <div class="theme-preview system-preview">
+                    <div class="preview-header"></div>
+                    <div class="preview-body">
+                      <div class="preview-msg"></div>
+                      <div class="preview-msg reply"></div>
+                    </div>
+                  </div>
+                  <span>System</span>
+                </label>
+              </div>
+            </div>
+
+            <div class="setting-group">
+              <label class="setting-label" for="font-size">
+                Schriftgrosse
+                <span class="setting-value" id="font-size-value">14px</span>
+              </label>
+              <input
+                type="range"
+                id="font-size"
+                class="range-input"
+                min="12"
+                max="18"
+                step="1"
+                value="14"
+              />
+              <div class="range-labels">
+                <span>Klein</span>
+                <span>Gross</span>
+              </div>
+            </div>
+          </section>
+
+          <!-- Behavior Section -->
+          <section id="section-behavior" class="settings-section">
+            <div class="section-header">
+              <h2>Verhalten</h2>
+              <p>Passe das Verhalten der Extension an</p>
+            </div>
+
+            <div class="setting-group">
+              <div class="toggle-setting">
+                <div>
+                  <label class="setting-label">Mit Enter senden</label>
+                  <span class="setting-hint"
+                    >Nachricht mit Enter senden, Shift+Enter fur
+                    Zeilenumbruch</span
+                  >
+                </div>
+                <label class="toggle">
+                  <input type="checkbox" id="send-with-enter" checked />
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+            </div>
+
+            <div class="setting-group">
+              <div class="toggle-setting">
+                <div>
+                  <label class="setting-label">Quellen anzeigen</label>
+                  <span class="setting-hint"
+                    >Zeige Quellen-Links unter AI-Antworten an</span
+                  >
+                </div>
+                <label class="toggle">
+                  <input type="checkbox" id="show-sources" checked />
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+            </div>
+          </section>
+
+          <!-- Data Section -->
+          <section id="section-data" class="settings-section">
+            <div class="section-header">
+              <h2>Daten & Speicher</h2>
+              <p>Verwalte deine gespeicherten Daten</p>
+            </div>
+
+            <div class="setting-group">
+              <label class="setting-label">Chat-Verlauf</label>
+              <div class="data-stats">
+                <div class="stat-card">
+                  <span class="stat-value" id="stat-conversations">0</span>
+                  <span class="stat-label">Chats</span>
+                </div>
+                <div class="stat-card">
+                  <span class="stat-value" id="stat-messages">0</span>
+                  <span class="stat-label">Nachrichten</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="setting-group">
+              <label class="setting-label">Alle Chats exportieren</label>
+              <button id="btn-export-all" class="btn btn-secondary">
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="7 10 12 15 17 10" />
+                  <line x1="12" y1="15" x2="12" y2="3" />
+                </svg>
+                Alle Chats als JSON exportieren
+              </button>
+            </div>
+
+            <div class="setting-group danger-zone">
+              <label class="setting-label">Gefahrenzone</label>
+              <button id="btn-clear-all" class="btn btn-danger">
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <polyline points="3 6 5 6 21 6" />
+                  <path
+                    d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
+                  />
+                </svg>
+                Alle Chats loschen
+              </button>
+              <span class="setting-hint"
+                >Diese Aktion kann nicht ruckgangig gemacht werden.</span
+              >
+            </div>
+
+            <div class="setting-group danger-zone">
+              <button id="btn-reset-settings" class="btn btn-danger-outline">
+                Einstellungen zurucksetzen
+              </button>
+              <span class="setting-hint"
+                >Setzt alle Einstellungen auf die Standardwerte zuruck.</span
+              >
+            </div>
+          </section>
+        </div>
+      </div>
+    </div>
+
+    <script src="options.js"></script>
+  </body>
+</html>

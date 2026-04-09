@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head><title>Icon Generator</title></head>
+<body>
+  <h2>AI Chat Pro - Icon Generator</h2>
+  <p>Right-click each icon below and "Save Image As" to create the PNG icons.</p>
+  <div style="display:flex;gap:20px;align-items:end;margin:20px;">
+    <div>
+      <canvas id="icon16" width="16" height="16"></canvas>
+      <p>16x16</p>
+    </div>
+    <div>
+      <canvas id="icon48" width="48" height="48"></canvas>
+      <p>48x48</p>
+    </div>
+    <div>
+      <canvas id="icon128" width="128" height="128"></canvas>
+      <p>128x128</p>
+    </div>
+  </div>
+  <script>
+    function drawIcon(canvas) {
+      const ctx = canvas.getContext('2d');
+      const s = canvas.width;
+      const r = s * 0.15;
+ 
+      // Background
+      ctx.beginPath();
+      ctx.roundRect(0, 0, s, s, r);
+      ctx.fillStyle = '#1f6feb';
+      ctx.fill();
+ 
+      // Chat bubble
+      const cx = s * 0.5;
+      const cy = s * 0.42;
+      const bw = s * 0.52;
+      const bh = s * 0.36;
+      const br = s * 0.1;
+ 
+      ctx.beginPath();
+      ctx.roundRect(cx - bw/2, cy - bh/2, bw, bh, br);
+      ctx.fillStyle = '#ffffff';
+      ctx.fill();
+ 
+      // Tail
+      ctx.beginPath();
+      ctx.moveTo(cx - bw * 0.15, cy + bh/2);
+      ctx.lineTo(cx - bw * 0.35, cy + bh/2 + s * 0.14);
+      ctx.lineTo(cx + bw * 0.05, cy + bh/2);
+      ctx.fillStyle = '#ffffff';
+      ctx.fill();
+ 
+      // Dots
+      const dotR = s * 0.04;
+      const dotY = cy;
+      ctx.fillStyle = '#1f6feb';
+      [-1, 0, 1].forEach(i => {
+        ctx.beginPath();
+        ctx.arc(cx + i * s * 0.12, dotY, dotR, 0, Math.PI * 2);
+        ctx.fill();
+      });
+    }
+ 
+    ['icon16', 'icon48', 'icon128'].forEach(id => {
+      drawIcon(document.getElementById(id));
+    });
+  </script>
+</body>
+</html>

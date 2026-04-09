@@ -44,7 +44,6 @@ Moderne Browser-Extension fur KI-Chat mit mehreren Providern in einer einheitlic
 ## Hinweise zu Providern
 
 - LM Studio:
-
   - Standard-URL ist `http://localhost:1234`
   - Stelle sicher, dass LM Studio lauft und ein Modell geladen ist
 

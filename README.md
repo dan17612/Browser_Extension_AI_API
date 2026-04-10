@@ -15,7 +15,7 @@ A modern browser extension that brings multiple AI providers together under a si
 
 ![Extension preview](./Aufzeichnung%202026-04-09%20195453.gif)
 
-## What's New in v1.0.1
+## What's New in v1.0.0
 
 This release marks the first stable version of **AI Chat Pro Client** and introduces a complete internationalization layer, persistent model verification, and full data backup support.
 

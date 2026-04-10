@@ -674,6 +674,90 @@
       return id;
     });
 
+    // Tables (GitHub-Flavored Markdown) — must run before lists/inline so cell
+    // content isn't mangled by line-based transforms.
+    const tables = [];
+    const parseTableRow = (line) => {
+      let s = line.trim();
+      if (s.startsWith("|")) s = s.slice(1);
+      if (s.endsWith("|")) s = s.slice(0, -1);
+      return s.split("|").map((c) => c.trim());
+    };
+    const renderInlineMd = (text) => {
+      const codes = [];
+      let out = text.replace(/`([^`]+)`/g, (_, c) => {
+        const id = `__TBLCODE_${codes.length}__`;
+        codes.push(`<code>${escapeHtml(c)}</code>`);
+        return id;
+      });
+      out = out.replace(/\*\*\*(.+?)\*\*\*/g, "<strong><em>$1</em></strong>");
+      out = out.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+      out = out.replace(/\*(.+?)\*/g, "<em>$1</em>");
+      out = out.replace(/~~(.+?)~~/g, "<del>$1</del>");
+      out = out.replace(
+        /\[([^\]]+)\]\(([^)]+)\)/g,
+        '<a href="$2" target="_blank" rel="noopener">$1</a>',
+      );
+      codes.forEach((c, i) => {
+        out = out.replace(`__TBLCODE_${i}__`, c);
+      });
+      return out;
+    };
+    const sepRe = /^\s*\|?\s*:?-+:?\s*(\|\s*:?-+:?\s*)+\|?\s*$/;
+    const tblLines = html.split("\n");
+    const cleanedLines = [];
+    let tli = 0;
+    while (tli < tblLines.length) {
+      const line = tblLines[tli];
+      const next = tblLines[tli + 1];
+      if (next !== undefined && line.includes("|") && sepRe.test(next)) {
+        const headerCells = parseTableRow(line);
+        const aligns = parseTableRow(next).map((c) => {
+          const l = c.startsWith(":");
+          const r = c.endsWith(":");
+          if (l && r) return "center";
+          if (r) return "right";
+          if (l) return "left";
+          return null;
+        });
+        const bodyRows = [];
+        let bj = tli + 2;
+        while (
+          bj < tblLines.length &&
+          tblLines[bj].includes("|") &&
+          tblLines[bj].trim() !== ""
+        ) {
+          bodyRows.push(parseTableRow(tblLines[bj]));
+          bj++;
+        }
+        let tableHtml = '<table class="md-table"><thead><tr>';
+        headerCells.forEach((c, idx) => {
+          const a = aligns[idx] ? ` style="text-align:${aligns[idx]}"` : "";
+          tableHtml += `<th${a}>${renderInlineMd(c)}</th>`;
+        });
+        tableHtml += "</tr></thead><tbody>";
+        bodyRows.forEach((row) => {
+          tableHtml += "<tr>";
+          for (let k = 0; k < headerCells.length; k++) {
+            const c = row[k] !== undefined ? row[k] : "";
+            const a = aligns[k] ? ` style="text-align:${aligns[k]}"` : "";
+            tableHtml += `<td${a}>${renderInlineMd(c)}</td>`;
+          }
+          tableHtml += "</tr>";
+        });
+        tableHtml += "</tbody></table>";
+
+        const id = `__TABLE_${tables.length}__`;
+        tables.push(tableHtml);
+        cleanedLines.push(id);
+        tli = bj;
+      } else {
+        cleanedLines.push(line);
+        tli++;
+      }
+    }
+    html = cleanedLines.join("\n");
+
     // Inline code (protect from other processing)
     const inlineCodes = [];
     html = html.replace(/`([^`]+)`/g, (_, code) => {
@@ -728,6 +812,7 @@
           block.startsWith("<blockquote") ||
           block.startsWith("<hr") ||
           block.startsWith("__CODE_") ||
+          block.startsWith("__TABLE_") ||
           block.startsWith("<div") ||
           block.startsWith("<li")
         ) {
@@ -745,6 +830,11 @@
     // Restore code blocks
     codeBlocks.forEach((block, i) => {
       html = html.replace(`__CODE_${i}__`, block);
+    });
+
+    // Restore tables
+    tables.forEach((tbl, i) => {
+      html = html.replace(`__TABLE_${i}__`, tbl);
     });
 
     return html;

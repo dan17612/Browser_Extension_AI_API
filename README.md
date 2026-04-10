@@ -15,7 +15,7 @@ A modern browser extension that brings multiple AI providers together under a si
 
 ![Extension preview](./Aufzeichnung%202026-04-09%20195453.gif)
 
-## What's New in v1.0.0
+## What's New in v1.0.1
 
 This release marks the first stable version of **AI Chat Pro Client** and introduces a complete internationalization layer, persistent model verification, and full data backup support.
 
@@ -107,16 +107,16 @@ The endpoint serves a JSON file with the following shape:
 }
 ```
 
-| Field | Description |
-| --- | --- |
-| `id` | Unique identifier. Bump this value to re-show the banner to users who previously dismissed it. |
-| `type` | One of `info`, `update`, `warning`. Controls the banner color. |
-| `title` / `body` / `linkLabel` | Either a plain string or an object keyed by language code (`en`, `de`, `ru`). Falls back to `en` if the active language has no entry. |
-| `link` | Optional URL. When present, a button is rendered. |
-| `targetVersion` | The banner is shown only if the installed extension version is **older** than this value. Users on the latest version will not see it; once a new release with a higher `targetVersion` is published, the banner reappears. |
-| `minVersion` | Optional lower bound. The banner is hidden for installs below this version. |
-| `dismissable` | If `false`, the banner cannot be closed until the `id` changes or it expires. |
-| `expiresAt` | Optional ISO-8601 timestamp. The banner disappears automatically afterwards. |
+| Field                                | Description                                                                                                                                                                                                                        |
+| ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`                               | Unique identifier. Bump this value to re-show the banner to users who previously dismissed it.                                                                                                                                     |
+| `type`                             | One of `info`, `update`, `warning`. Controls the banner color.                                                                                                                                                               |
+| `title` / `body` / `linkLabel` | Either a plain string or an object keyed by language code (`en`, `de`, `ru`). Falls back to `en` if the active language has no entry.                                                                                      |
+| `link`                             | Optional URL. When present, a button is rendered.                                                                                                                                                                                  |
+| `targetVersion`                    | The banner is shown only if the installed extension version is**older** than this value. Users on the latest version will not see it; once a new release with a higher `targetVersion` is published, the banner reappears. |
+| `minVersion`                       | Optional lower bound. The banner is hidden for installs below this version.                                                                                                                                                        |
+| `dismissable`                      | If `false`, the banner cannot be closed until the `id` changes or it expires.                                                                                                                                                  |
+| `expiresAt`                        | Optional ISO-8601 timestamp. The banner disappears automatically afterwards.                                                                                                                                                       |
 
 A ready-to-host example lives in [`examples/announcement-main.json`](examples/announcement-main.json).
 

@@ -815,6 +815,13 @@ details.setting-group .advanced-content {
   color: var(--color-text-tertiary);
 }
 
+.check-timestamp {
+  font-size: 11px;
+  color: var(--color-text-tertiary);
+  font-style: italic;
+  margin-bottom: 4px;
+}
+
 /* ---- Custom Model Tags ---- */
 .custom-model-list {
   display: flex;

@@ -49,6 +49,8 @@
 
   // ---- Initialize ----
   async function init() {
+    // Apply i18n before anything renders
+    if (window.i18n) window.i18n.applyTranslations();
     await loadState();
     applySettings();
     renderConversationList();
@@ -155,9 +157,10 @@
     const currentModel = s.models?.[provider] || s.model || provider;
     dom.modelBadge.textContent = currentModel;
     // Input hint
+    const _t = window.i18n ? window.i18n.t : (k) => k;
     dom.inputHintText.textContent = s.sendWithEnter
-      ? "Enter zum Senden, Shift+Enter fur neue Zeile"
-      : "Ctrl+Enter zum Senden, Enter fur neue Zeile";
+      ? _t("input.hint")
+      : _t("input.hintCtrl");
   }
 
   function getSystemTheme() {
@@ -194,10 +197,12 @@
     dom.messageInput.addEventListener("input", handleInputChange);
     dom.messageInput.addEventListener("keydown", handleInputKeydown);
 
-    // Suggestion chips
+    // Suggestion chips – use translated prompt if available
     $$(".suggestion-chip").forEach((chip) => {
       chip.addEventListener("click", () => {
-        dom.messageInput.value = chip.dataset.prompt;
+        const promptKey = chip.dataset.i18nPrompt;
+        dom.messageInput.value =
+          promptKey && window.i18n ? window.i18n.t(promptKey) : chip.dataset.prompt;
         handleInputChange();
         sendMessage();
       });
@@ -296,9 +301,10 @@
 
   // ---- Conversations ----
   function createNewChat() {
+    const _t = window.i18n ? window.i18n.t : (k) => k;
     const conv = {
       id: generateId(),
-      title: "Neuer Chat",
+      title: _t("conv.newChat"),
       messages: [],
       createdAt: Date.now(),
       updatedAt: Date.now(),
@@ -335,7 +341,7 @@
     saveState();
     renderConversationList();
     renderActiveChat();
-    showToast("Chat geloscht", "success");
+    showToast(window.i18n ? window.i18n.t("toast.chatDeleted") : "Chat deleted.", "success");
   }
 
   // ---- Rename ----
@@ -385,11 +391,13 @@
     );
 
     if (filtered.length === 0) {
+      const _t = window.i18n ? window.i18n.t : (k) => k;
       dom.conversationList.innerHTML =
-        '<div class="conv-empty">Keine Chats vorhanden</div>';
+        `<div class="conv-empty">${_t("conv.empty")}</div>`;
       return;
     }
 
+    const _tConv = window.i18n ? window.i18n.t : (k) => k;
     dom.conversationList.innerHTML = filtered
       .map(
         (conv) => `
@@ -400,13 +408,13 @@
         </svg>
         <span class="conv-title">${escapeHtml(conv.title)}</span>
         <div class="conv-actions">
-          <button class="conv-rename" data-id="${conv.id}" title="Umbenennen">
+          <button class="conv-rename" data-id="${conv.id}" title="${_tConv("conv.rename")}">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
               <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
             </svg>
           </button>
-          <button class="conv-delete" data-id="${conv.id}" title="Loschen">
+          <button class="conv-delete" data-id="${conv.id}" title="${_tConv("conv.delete")}">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <line x1="18" y1="6" x2="6" y2="18"></line>
               <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -460,7 +468,7 @@
     if (!conv) {
       dom.welcomeScreen.style.display = "flex";
       dom.messages.style.display = "none";
-      dom.chatTitle.textContent = "Neuer Chat";
+      dom.chatTitle.textContent = window.i18n ? window.i18n.t("header.newChat") : "New Chat";
       return;
     }
 
@@ -480,8 +488,9 @@
   }
 
   function renderMessage(msg) {
+    const _t = window.i18n ? window.i18n.t : (k) => k;
     const isUser = msg.role === "user";
-    const avatar = isUser ? "Du" : "AI";
+    const avatar = isUser ? _t("msg.you").substring(0, 2) : "AI";
     const time = formatTime(msg.timestamp);
     const body = isUser
       ? escapeHtml(msg.content).replace(/\n/g, "<br>")
@@ -496,7 +505,7 @@
     ) {
       sourcesHtml = `
         <div class="message-sources">
-          <div class="sources-title">Quellen</div>
+          <div class="sources-title">${_t("msg.sources")}</div>
           <div>${msg.citations
             .map((url, i) => {
               const domain = extractDomain(url);
@@ -512,7 +521,7 @@
         <div class="message-avatar">${avatar}</div>
         <div class="message-content">
           <div class="message-header">
-            <span class="message-author">${isUser ? "Du" : "AI Chat Pro"}</span>
+            <span class="message-author">${isUser ? _t("msg.you") : _t("msg.ai")}</span>
             <span class="message-time">${time}</span>
           </div>
           <div class="message-body">${body}</div>
@@ -534,7 +543,7 @@
     const _apiKey =
       state.settings.apiKeys?.[_provider] || state.settings.apiKey || "";
     if (_provider !== "lmstudio" && !_apiKey) {
-      showToast("Bitte API Key in den Einstellungen hinterlegen", "error");
+      showToast(window.i18n ? window.i18n.t("toast.noApiKey") : "API key not configured.", "error");
       return;
     }
 
@@ -590,7 +599,14 @@
             if (chrome.runtime.lastError) {
               reject(new Error(chrome.runtime.lastError.message));
             } else if (resp.error) {
-              reject(new Error(resp.error));
+              if (resp.errorCode && window.i18n) {
+                const params = resp.errorParams || [];
+                reject(
+                  new Error(window.i18n.t("error." + resp.errorCode, ...params)),
+                );
+              } else {
+                reject(new Error(resp.error));
+              }
             } else {
               resolve(resp);
             }
@@ -644,12 +660,13 @@
     html = html.replace(/```(\w*)\n([\s\S]*?)```/g, (_, lang, code) => {
       const id = `__CODE_${codeBlocks.length}__`;
       const highlighted = highlightSyntax(code.trim(), lang);
+      const _tCopy = window.i18n ? window.i18n.t : (k) => k;
       codeBlocks.push(`<div class="code-block">
         <div class="code-header">
           <span class="code-lang">${lang || "code"}</span>
           <button class="btn-copy-code" data-code="${encodeURIComponent(code.trim())}">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-            Kopieren
+            ${_tCopy("code.copy")}
           </button>
         </div>
         <pre><code>${highlighted}</code></pre>
@@ -886,13 +903,14 @@
         try {
           await navigator.clipboard.writeText(code);
           btn.classList.add("copied");
-          btn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Kopiert!`;
+          const _t = window.i18n ? window.i18n.t : (k) => k;
+          btn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> ${_t("code.copied")}`;
           setTimeout(() => {
             btn.classList.remove("copied");
-            btn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Kopieren`;
+            btn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> ${_t("code.copy")}`;
           }, 2000);
         } catch {
-          showToast("Kopieren fehlgeschlagen", "error");
+          showToast(window.i18n ? window.i18n.t("toast.copyFailed") : "Copy failed.", "error");
         }
       });
     });
@@ -902,7 +920,7 @@
   function exportChat(format) {
     const conv = getActiveConversation();
     if (!conv || conv.messages.length === 0) {
-      showToast("Kein Chat zum Exportieren", "error");
+      showToast(window.i18n ? window.i18n.t("toast.noChatToExport") : "No chat to export.", "error");
       toggleModal(dom.exportModal, false);
       return;
     }
@@ -942,7 +960,7 @@
     URL.revokeObjectURL(url);
 
     toggleModal(dom.exportModal, false);
-    showToast("Chat exportiert!", "success");
+    showToast(window.i18n ? window.i18n.t("toast.exportedChat") : "Chat exported!", "success");
   }
 
   // ---- Helpers ----
@@ -957,18 +975,18 @@
   }
 
   function formatTime(timestamp) {
+    const _t = window.i18n ? window.i18n.t : (k) => k;
+    const lang = window.i18n ? window.i18n.i18nGetLang() : "en";
+    const locale = lang === "de" ? "de-DE" : lang === "ru" ? "ru-RU" : "en-GB";
     const d = new Date(timestamp);
     const now = new Date();
     const diff = now - d;
 
-    if (diff < 60000) return "gerade eben";
-    if (diff < 3600000) return Math.floor(diff / 60000) + " Min.";
+    if (diff < 60000) return _t("time.justNow");
+    if (diff < 3600000) return _t("time.min", Math.floor(diff / 60000));
     if (diff < 86400000)
-      return d.toLocaleTimeString("de-DE", {
-        hour: "2-digit",
-        minute: "2-digit",
-      });
-    return d.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit" });
+      return d.toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" });
+    return d.toLocaleDateString(locale, { day: "2-digit", month: "2-digit" });
   }
 
   function extractDomain(url) {

@@ -1,58 +1,79 @@
-# AI Chat Pro Browser Extension
+# AI Chat Pro Client
 
-Moderne Browser-Extension fur KI-Chat mit mehreren Providern in einer einheitlichen Oberflache.
+A modern browser extension that brings multiple AI providers together under a single, unified chat interface.
 
-## Vorschau
+## Preview
 
-![Aufzeichnung der Extension](./Aufzeichnung%202026-04-09%20195453.gif)
+![Extension preview](./Aufzeichnung%202026-04-09%20195453.gif)
+
+## What's New in v1.0.0
+
+This release marks the first stable version of **AI Chat Pro Client** and introduces a complete internationalization layer, persistent model verification, and full data backup support.
+
+- **Multilingual interface (EN / DE / RU)** — The entire UI of both the popup and the options page is now translatable. The active language follows the browser locale by default and can be switched manually under *Appearance → Language*. A reusable i18n module (`shared/i18n.js`) powers the translation pipeline through `data-i18n` attributes.
+- **Localized backend errors** — Errors raised by the background service worker (missing API key, connection failures, provider responses, LM Studio errors) are returned as structured error codes and translated in the popup, so users always see error messages in their selected language.
+- **Persistent model verification** — Results from *Check models* are now cached per provider and per model in extension storage. Each provider view displays a *Last check: …* timestamp so you can see at a glance which models are reachable without re-running the test.
+- **Full backup export & import** — *Export backup* now produces a single JSON file (`type: "ai-chat-pro-client-backup"`, version `2.0`) containing all conversations, the active conversation, and all settings (providers, models, custom models, base URLs, appearance, behavior). The corresponding *Import backup* action restores everything in one step and remains backwards-compatible with the legacy conversation-only export format.
+- **Custom model management** — Models added manually through the options page are stored per provider, can be removed individually, and their cached check results are cleaned up automatically.
+- **Rebrand to *AI Chat Pro Client*** — Application name, manifest, popup title, and all user-facing strings have been unified.
 
 ## Features
 
-- Mehrere Provider: Perplexity, OpenAI, Anthropic, Gemini, LM Studio
-- Lokale Speicherung von Einstellungen und Chats
-- Einstellungsseite mit Provider-spezifischen Feldern
-- Chat-Export (z. B. JSON/Markdown)
-- LM Studio Support fur lokale Modelle
+- **Multiple providers** — Perplexity, OpenAI, Anthropic, Google Gemini, and LM Studio (local).
+- **Unified chat UI** — Conversation list, search, rename, delete, and Markdown rendering with code-block copy buttons.
+- **Local-first storage** — Conversations, settings, API keys, and custom models are stored locally via `chrome.storage.local` and never leave the browser.
+- **Per-provider configuration** — API key, base URL, model selection, temperature, max tokens, and system prompt are configured independently for each provider.
+- **Connection & model testing** — One-click *Test API* and *Check models* actions per provider, with cached results.
+- **Custom models** — Add provider-specific model IDs by hand when the official model list lags behind.
+- **LM Studio support** — Talk to local OpenAI-compatible servers; auto-discovery of loaded models, optional bearer token.
+- **Backup & restore** — Export and import the full extension state as a single JSON file.
+- **Appearance & behavior** — Dark / light theme, font size, send-with-Enter toggle, source link toggle, and language selector.
+- **Chat export** — Export an individual conversation as Markdown or JSON.
 
-## Projektstruktur
+## Project Structure
 
-- [manifest.json](manifest.json): Extension-Konfiguration
-- [popup/popup.html](popup/popup.html): Chat-Oberflache
-- [popup/popup.js](popup/popup.js): Chat-Logik im Popup
-- [options/options.html](options/options.html): Einstellungsseite
-- [options/options.js](options/options.js): Provider- und API-Tests
-- [background/background.js](background/background.js): API-Aufrufe pro Provider
+- [`manifest.json`](manifest.json) — Extension manifest (MV3)
+- [`popup/popup.html`](popup/popup.html) — Chat UI markup
+- [`popup/popup.js`](popup/popup.js) — Chat logic, rendering, state management
+- [`options/options.html`](options/options.html) — Settings page markup
+- [`options/options.js`](options/options.js) — Provider configuration, model checks, backup I/O
+- [`background/background.js`](background/background.js) — Provider API routing in the service worker
+- [`shared/i18n.js`](shared/i18n.js) — Translation dictionary and helpers (EN / DE / RU)
 
-## Installation (Chrome/Edge)
+## Installation (Chrome / Edge)
 
-1. Repository lokal klonen oder als ZIP entpacken.
-2. Browser offnen und Erweiterungsseite aufrufen:
+1. Clone this repository or download it as a ZIP and extract it.
+2. Open the extensions page in your browser:
    - Chrome: `chrome://extensions`
    - Edge: `edge://extensions`
-3. Entwicklermodus aktivieren.
-4. `Entpackte Erweiterung laden` auswahlen.
-5. Projektordner `Browser_Extension` auswahlen.
+3. Enable **Developer mode**.
+4. Click **Load unpacked**.
+5. Select the project root directory.
 
-## Verwendung
+## Usage
 
-1. Extension offnen.
-2. Auf Einstellungen gehen und Provider auswahlen.
-3. API-Key hinterlegen. Bei LM Studio ist er optional.
-4. Optional Modell und Base-URL anpassen.
-5. Im Chat eine Nachricht senden.
+1. Open the extension from the toolbar.
+2. Click the settings icon and choose your preferred provider.
+3. Enter the API key (optional for LM Studio).
+4. Optionally adjust the model, base URL, temperature, and system prompt.
+5. Return to the popup and start chatting.
 
-## Hinweise zu Providern
+## Provider Notes
 
-- LM Studio:
-  - Standard-URL ist `http://localhost:1234`
-  - Ein API-Key kann optional gesetzt werden, falls dein lokaler Server Authentifizierung verlangt
-  - Stelle sicher, dass LM Studio lauft und ein Modell geladen ist
+- **LM Studio**
+  - Default server URL: `http://localhost:1234`
+  - An API key can be set if your local server enforces authentication.
+  - Make sure LM Studio is running and a model is loaded before sending a message.
+- **OpenAI / Anthropic / Gemini / Perplexity**
+  - Each provider has its own API key field. Keys are stored locally and never shared.
+  - The *Base URL (advanced)* field lets you point to OpenAI-compatible proxies or self-hosted gateways.
 
-## Entwicklung
+## Development
 
-- Keine Build-Pipeline erforderlich (reines Browser-Extension-Projekt)
-- Nach Codeanderungen Extension auf der Browser-Erweiterungsseite neu laden
+- No build pipeline — this is a plain browser extension project.
+- After editing files, reload the extension on the browser's extensions page.
+- The i18n dictionary lives in `shared/i18n.js`. To add a new language, add a new key under `TRANSLATIONS` and extend the language selector in `options/options.html`.
 
-## Lizenz
+## License
 
 MIT

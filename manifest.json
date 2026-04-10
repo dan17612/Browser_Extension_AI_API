@@ -1,13 +1,13 @@
 {
   "manifest_version": 3,
-  "name": "AI Chat Pro",
+  "name": "AI Chat Pro Client",
   "version": "1.0.0",
-  "description": "Professional AI Chat powered by Perplexity API with customizable settings and modern UI",
+  "description": "Professional AI Chat Client supporting multiple AI providers with customizable settings and modern UI",
   "permissions": ["storage"],
   "host_permissions": ["<all_urls>"],
   "action": {
     "default_popup": "popup/popup.html",
-    "default_title": "AI Chat Pro"
+    "default_title": "AI Chat Pro Client"
   },
   "options_page": "options/options.html",
   "background": {

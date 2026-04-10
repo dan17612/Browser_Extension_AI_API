@@ -35,16 +35,26 @@
       gemini: [],
       lmstudio: [],
     },
+    modelCheckCache: {
+      perplexity: {},
+      openai: {},
+      anthropic: {},
+      gemini: {},
+      lmstudio: {},
+    },
     temperature: 0.7,
     maxTokens: 2048,
     systemPrompt:
       "You are a helpful, accurate, and friendly AI assistant. Provide clear and concise answers. Use markdown formatting when appropriate.",
     theme: "dark",
     fontSize: 14,
+    language: "system",
     sendWithEnter: true,
     streamResponses: true,
     showSources: true,
   };
+
+  const t = (key, ...args) => (window.i18n ? window.i18n.t(key, ...args) : key);
 
   const PROVIDER_CONFIG = {
     perplexity: {
@@ -153,12 +163,15 @@
     systemPrompt: $("#system-prompt"),
     fontSize: $("#font-size"),
     fontSizeValue: $("#font-size-value"),
+    languageSelect: $("#language-select"),
     sendWithEnter: $("#send-with-enter"),
     showSources: $("#show-sources"),
     saveStatus: $("#save-status"),
     statConversations: $("#stat-conversations"),
     statMessages: $("#stat-messages"),
     btnExportAll: $("#btn-export-all"),
+    btnImportAll: $("#btn-import-all"),
+    importFileInput: $("#import-file-input"),
     btnClearAll: $("#btn-clear-all"),
     btnResetSettings: $("#btn-reset-settings"),
   };
@@ -166,9 +179,20 @@
   // ---- Init ----
   async function init() {
     await loadSettings();
+    applyLanguage();
+    if (window.i18n) window.i18n.applyTranslations();
     populateUI();
     bindEvents();
     loadStats();
+  }
+
+  function applyLanguage() {
+    const lang = settings.language || "system";
+    if (lang === "system") {
+      localStorage.removeItem("ai-chat-lang");
+    } else {
+      localStorage.setItem("ai-chat-lang", lang);
+    }
   }
 
   async function loadSettings() {
@@ -212,6 +236,11 @@
     settings.customModels = settings.customModels || {
       perplexity: [], openai: [], anthropic: [], gemini: [], lmstudio: [],
     };
+    settings.modelCheckCache = settings.modelCheckCache || {
+      perplexity: {}, openai: {}, anthropic: {}, gemini: {}, lmstudio: {},
+    };
+    // Ensure language field exists
+    if (!settings.language) settings.language = "system";
   }
 
   async function saveSettings() {
@@ -254,6 +283,11 @@
     dom.fontSize.value = settings.fontSize;
     dom.fontSizeValue.textContent = settings.fontSize + "px";
 
+    // Language
+    if (dom.languageSelect) {
+      dom.languageSelect.value = settings.language || "system";
+    }
+
     // Toggles
     dom.sendWithEnter.checked = settings.sendWithEnter;
     dom.showSources.checked = settings.showSources;
@@ -269,21 +303,20 @@
 
     dom.btnLoadModels.disabled = true;
     dom.btnLoadModels.style.opacity = "0.5";
-    dom.lmStudioModelHint.textContent = "Lade Modelle...";
+    dom.lmStudioModelHint.textContent = t("model.lmLoading");
 
     try {
       const response = await fetch(`${baseUrl}/v1/models`, {
         headers: apiKey ? { Authorization: `Bearer ${apiKey}` } : {},
       });
       if (!response.ok)
-        throw new Error(`Server antwortete mit ${response.status}`);
+        throw new Error(`${response.status}`);
 
       const data = await response.json();
       const models = (data.data || []).map((m) => m.id).filter(Boolean);
 
       if (models.length === 0) {
-        dom.lmStudioModelHint.textContent =
-          "Keine Modelle gefunden. Bitte ein Modell in LM Studio laden.";
+        dom.lmStudioModelHint.textContent = t("model.lmNone");
         return;
       }
 
@@ -302,9 +335,9 @@
         saveSettings();
       }
 
-      dom.lmStudioModelHint.textContent = `${models.length} Modell${models.length !== 1 ? "e" : ""} gefunden.`;
+      dom.lmStudioModelHint.textContent = t("model.lmFound", models.length);
     } catch (err) {
-      dom.lmStudioModelHint.textContent = `Verbindungsfehler: ${err.message} — LM Studio gestartet?`;
+      dom.lmStudioModelHint.textContent = t("model.lmConnError", err.message);
     } finally {
       dom.btnLoadModels.disabled = false;
       dom.btnLoadModels.style.opacity = "";
@@ -337,8 +370,7 @@
       dom.apiKey.placeholder = cfg.placeholder;
       dom.apiKey.type = "password";
       dom.apiKey.value = settings.apiKeys?.[provider] || "";
-      dom.apiKeyHint.textContent =
-        "Dein API Key wird lokal in der Extension gespeichert und nie an Dritte weitergegeben.";
+      dom.apiKeyHint.textContent = t("api.keyHint");
       const storedUrl = settings.baseUrls?.[provider] || "";
       dom.baseUrl.value = storedUrl;
       dom.baseUrl.placeholder =
@@ -371,8 +403,58 @@
       dom.modelSelect.classList.remove("hidden");
       dom.lmStudioModelGroup.classList.add("hidden");
       rebuildModelSelect(provider);
-      dom.modelCheckResults.innerHTML = "";
+      renderModelCheckResults(provider);
     }
+  }
+
+  function renderModelCheckResults(provider) {
+    const cache = settings.modelCheckCache?.[provider] || {};
+    const cfg = PROVIDER_CONFIG[provider];
+    if (!cfg) {
+      dom.modelCheckResults.innerHTML = "";
+      return;
+    }
+    const custom = (settings.customModels?.[provider] || []).map((id) => ({
+      value: id, label: id,
+    }));
+    const allModels = [...cfg.models, ...custom];
+    const cached = allModels.filter((m) => cache[m.value]);
+    if (cached.length === 0) {
+      dom.modelCheckResults.innerHTML = "";
+      return;
+    }
+    // Find most recent timestamp for "Last check" label
+    const latest = Math.max(
+      ...cached.map((m) => cache[m.value].checkedAt || 0),
+    );
+    const timestampStr = formatCheckTime(latest);
+    const rowsHtml = allModels
+      .map((m) => {
+        const entry = cache[m.value];
+        if (!entry) return "";
+        const icon = entry.ok
+          ? `<svg class="check-icon ok" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>`
+          : `<svg class="check-icon fail" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`;
+        return `<div class="check-item" data-model="${escapeHtml(m.value)}">
+          ${icon}
+          <span class="check-label">${escapeHtml(m.label || m.value)}</span>
+        </div>`;
+      })
+      .join("");
+    dom.modelCheckResults.innerHTML =
+      `<div class="check-timestamp">${escapeHtml(t("model.checkLastRun", timestampStr))}</div>` +
+      rowsHtml;
+  }
+
+  function formatCheckTime(ts) {
+    if (!ts) return "—";
+    const d = new Date(ts);
+    const lang = window.i18n ? window.i18n.i18nGetLang() : "en";
+    const locale = lang === "de" ? "de-DE" : lang === "ru" ? "ru-RU" : "en-GB";
+    return d.toLocaleString(locale, {
+      day: "2-digit", month: "2-digit", year: "numeric",
+      hour: "2-digit", minute: "2-digit",
+    });
   }
 
   function rebuildModelSelect(provider) {
@@ -397,7 +479,7 @@
         (id) => `
       <span class="custom-model-tag">
         ${escapeHtml(id)}
-        <button class="custom-model-remove" data-id="${escapeHtml(id)}" title="Entfernen">
+        <button class="custom-model-remove" data-id="${escapeHtml(id)}" title="${escapeHtml(t("model.removeTitle"))}">
           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
             <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
           </svg>
@@ -536,6 +618,18 @@
       saveSettings();
     });
 
+    // Language
+    if (dom.languageSelect) {
+      dom.languageSelect.addEventListener("change", () => {
+        settings.language = dom.languageSelect.value;
+        applyLanguage();
+        if (window.i18n) window.i18n.applyTranslations();
+        // Re-render dynamic strings that depend on language
+        updateProviderUI(settings.provider || "perplexity");
+        saveSettings();
+      });
+    }
+
     // Toggles
     dom.sendWithEnter.addEventListener("change", () => {
       settings.sendWithEnter = dom.sendWithEnter.checked;
@@ -546,8 +640,16 @@
       saveSettings();
     });
 
-    // Export All
+    // Export All (full backup)
     dom.btnExportAll.addEventListener("click", exportAllChats);
+
+    // Import backup
+    if (dom.btnImportAll && dom.importFileInput) {
+      dom.btnImportAll.addEventListener("click", () =>
+        dom.importFileInput.click(),
+      );
+      dom.importFileInput.addEventListener("change", importBackup);
+    }
 
     // Clear All
     dom.btnClearAll.addEventListener("click", clearAllChats);
@@ -569,12 +671,12 @@
     const key = dom.apiKey.value.trim();
 
     if (provider !== "lmstudio" && !key) {
-      showTestResult("Bitte gib zuerst einen API Key ein.", "error");
+      showTestResult(t("api.noKey"), "error");
       return;
     }
 
     dom.btnTestApi.disabled = true;
-    dom.btnTestApi.innerHTML = '<span class="loading">Teste...</span>';
+    dom.btnTestApi.innerHTML = `<span class="loading">${escapeHtml(t("api.testing"))}</span>`;
 
     try {
       let ok = false;
@@ -650,26 +752,26 @@
         const headers = key ? { Authorization: `Bearer ${key}` } : {};
         const r = await fetch(`${baseUrl}/v1/models`, { headers });
         ok = r.ok;
-        if (!ok) errMsg = `Server nicht erreichbar (${r.status})`;
+        if (!ok) errMsg = `(${r.status})`;
       }
 
       if (ok) {
         showTestResult(
           provider === "lmstudio"
             ? key
-              ? "Verbindung erfolgreich. Optionaler API Key wurde akzeptiert."
-              : "Verbindung erfolgreich. LM Studio ist ohne API Key erreichbar."
-            : "Verbindung erfolgreich! API Key ist gültig.",
+              ? t("api.successLmStudioKey")
+              : t("api.successLmStudio")
+            : t("api.success"),
           "success",
         );
       } else {
-        showTestResult(`Fehler: ${errMsg}`, "error");
+        showTestResult(t("api.errorPrefix") + errMsg, "error");
       }
     } catch (err) {
-      showTestResult(`Verbindungsfehler: ${err.message}`, "error");
+      showTestResult(t("api.connError") + err.message, "error");
     } finally {
       dom.btnTestApi.disabled = false;
-      dom.btnTestApi.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> API testen`;
+      dom.btnTestApi.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> ${escapeHtml(t("api.testBtn"))}`;
     }
   }
 
@@ -692,52 +794,117 @@
     dom.statMessages.textContent = totalMessages;
   }
 
+  /**
+   * Full backup: conversations + settings (includes custom models, base URLs,
+   * API keys, model check cache, language, etc).
+   */
   async function exportAllChats() {
-    const data = await chrome.storage.local.get("conversations");
+    const data = await chrome.storage.local.get([
+      "conversations",
+      "activeConversationId",
+      "settings",
+    ]);
     const convos = data.conversations || [];
-    if (convos.length === 0) {
-      alert("Keine Chats zum Exportieren.");
+    const stgs = data.settings || settings;
+    if (convos.length === 0 && !stgs) {
+      alert(t("data.noChatToExport"));
       return;
     }
-    const content = JSON.stringify(
-      { exportedAt: new Date().toISOString(), conversations: convos },
-      null,
-      2,
-    );
+    const backup = {
+      type: "ai-chat-pro-client-backup",
+      version: "2.0",
+      exportedAt: new Date().toISOString(),
+      conversations: convos,
+      activeConversationId: data.activeConversationId || null,
+      settings: stgs,
+    };
+    const content = JSON.stringify(backup, null, 2);
     const blob = new Blob([content], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `ai-chat-pro-export-${Date.now()}.json`;
+    a.download = `ai-chat-pro-client-backup-${Date.now()}.json`;
     a.click();
     URL.revokeObjectURL(url);
   }
 
+  /**
+   * Import full backup. Validates file structure, then restores everything.
+   */
+  async function importBackup(e) {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    try {
+      const text = await file.text();
+      const backup = JSON.parse(text);
+
+      // Validate: accept new "ai-chat-pro-client-backup" or legacy {conversations: [...]}
+      const isNewFormat = backup.type === "ai-chat-pro-client-backup";
+      const isLegacyFormat = Array.isArray(backup.conversations);
+      if (!isNewFormat && !isLegacyFormat) {
+        throw new Error("invalid");
+      }
+
+      const update = {};
+      if (Array.isArray(backup.conversations)) {
+        update.conversations = backup.conversations;
+      }
+      if (backup.activeConversationId !== undefined) {
+        update.activeConversationId = backup.activeConversationId;
+      }
+      if (backup.settings && typeof backup.settings === "object") {
+        update.settings = backup.settings;
+      }
+      await chrome.storage.local.set(update);
+
+      // Refresh local state
+      if (update.settings) {
+        settings = update.settings;
+        await loadSettings(); // re-normalize
+        applyLanguage();
+        if (window.i18n) window.i18n.applyTranslations();
+        populateUI();
+      }
+      loadStats();
+      alert(t("data.importSuccess"));
+    } catch (err) {
+      alert(t("data.importError"));
+    } finally {
+      // Reset file input so the same file can be re-selected
+      e.target.value = "";
+    }
+  }
+
   async function clearAllChats() {
-    if (
-      !confirm(
-        "Alle Chats wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.",
-      )
-    )
-      return;
+    if (!confirm(t("data.clearConfirm"))) return;
     await chrome.storage.local.set({
       conversations: [],
       activeConversationId: null,
     });
     loadStats();
-    alert("Alle Chats wurden gelöscht.");
+    alert(t("data.clearDone"));
   }
 
   async function resetSettings() {
-    if (!confirm("Einstellungen wirklich zurücksetzen?")) return;
+    if (!confirm(t("data.resetConfirm"))) return;
     settings = {
       ...DEFAULT_SETTINGS,
       apiKeys: { ...DEFAULT_SETTINGS.apiKeys },
       models: { ...DEFAULT_SETTINGS.models },
+      baseUrls: { ...DEFAULT_SETTINGS.baseUrls },
+      customModels: {
+        perplexity: [], openai: [], anthropic: [], gemini: [], lmstudio: [],
+      },
+      modelCheckCache: {
+        perplexity: {}, openai: {}, anthropic: {}, gemini: {}, lmstudio: {},
+      },
     };
     await saveSettings();
+    applyLanguage();
+    if (window.i18n) window.i18n.applyTranslations();
     populateUI();
-    alert("Einstellungen wurden zurückgesetzt.");
+    updateProviderUI(settings.provider || "perplexity");
+    alert(t("data.resetDone"));
   }
 
   // ---- Custom Models ----
@@ -764,6 +931,10 @@
     settings.customModels[provider] = (settings.customModels[provider] || []).filter(
       (m) => m !== id,
     );
+    // Drop any cached health-check result for the removed model
+    if (settings.modelCheckCache?.[provider]?.[id]) {
+      delete settings.modelCheckCache[provider][id];
+    }
     // If the removed model was selected, fall back to first built-in
     if (settings.models[provider] === id) {
       settings.models[provider] = PROVIDER_CONFIG[provider].models[0]?.value || "";
@@ -771,6 +942,7 @@
     saveSettings();
     rebuildModelSelect(provider);
     dom.modelSelect.value = settings.models[provider];
+    renderModelCheckResults(provider);
   }
 
   // ---- Model Health Check ----
@@ -780,7 +952,7 @@
     const apiKey = settings.apiKeys?.[provider] || "";
     if (!apiKey) {
       dom.modelCheckResults.innerHTML =
-        '<span class="check-hint">Bitte zuerst API Key eingeben.</span>';
+        `<span class="check-hint">${escapeHtml(t("model.checkNoKey"))}</span>`;
       return;
     }
 
@@ -802,11 +974,19 @@
       )
       .join("");
 
+    // Ensure cache exists for this provider
+    if (!settings.modelCheckCache) settings.modelCheckCache = {};
+    if (!settings.modelCheckCache[provider]) {
+      settings.modelCheckCache[provider] = {};
+    }
+    const cache = settings.modelCheckCache[provider];
+
     for (const model of allModels) {
       const row = dom.modelCheckResults.querySelector(
         `[data-model="${CSS.escape(model.value)}"]`,
       );
       const ok = await probeModel(provider, apiKey, model.value);
+      cache[model.value] = { ok, checkedAt: Date.now() };
       const spinnerEl = row?.querySelector(".check-spinner");
       if (spinnerEl) {
         spinnerEl.outerHTML = ok
@@ -814,6 +994,9 @@
           : `<svg class="check-icon fail" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`;
       }
     }
+    // Persist results and re-render so the "Last check" timestamp appears
+    await saveSettings();
+    renderModelCheckResults(provider);
     dom.btnCheckModels.disabled = false;
   }
 

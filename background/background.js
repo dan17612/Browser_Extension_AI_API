@@ -109,8 +109,8 @@ async function handleChat(request, sendResponse) {
 
     if (provider !== "lmstudio" && !apiKey) {
       sendResponse({
-        error:
-          "API Key nicht konfiguriert. Bitte in den Einstellungen hinterlegen.",
+        error: "API key not configured. Please set it in the settings.",
+        errorCode: "apiKeyMissing",
       });
       return;
     }
@@ -132,7 +132,11 @@ async function handleChat(request, sendResponse) {
         await callPerplexity(s, apiKey, model, request, sendResponse);
     }
   } catch (err) {
-    sendResponse({ error: `Verbindungsfehler: ${err.message}` });
+    sendResponse({
+      error: `Connection error: ${err.message}`,
+      errorCode: "connection",
+      errorParams: [err.message],
+    });
   }
 }
 
@@ -166,8 +170,11 @@ async function callPerplexity(s, apiKey, model, request, sendResponse) {
   });
   if (!response.ok) {
     const err = await response.json().catch(() => ({}));
+    const detail = err.error?.message || response.statusText;
     sendResponse({
-      error: `API Fehler (${response.status}): ${err.error?.message || response.statusText}`,
+      error: `API error (${response.status}): ${detail}`,
+      errorCode: "api",
+      errorParams: [response.status, detail],
     });
     return;
   }
@@ -200,8 +207,11 @@ async function callOpenAI(s, apiKey, model, request, sendResponse) {
   });
   if (!response.ok) {
     const err = await response.json().catch(() => ({}));
+    const detail = err.error?.message || response.statusText;
     sendResponse({
-      error: `API Fehler (${response.status}): ${err.error?.message || response.statusText}`,
+      error: `API error (${response.status}): ${detail}`,
+      errorCode: "api",
+      errorParams: [response.status, detail],
     });
     return;
   }
@@ -230,8 +240,11 @@ async function callAnthropic(s, apiKey, model, request, sendResponse) {
   });
   if (!response.ok) {
     const err = await response.json().catch(() => ({}));
+    const detail = err.error?.message || response.statusText;
     sendResponse({
-      error: `API Fehler (${response.status}): ${err.error?.message || response.statusText}`,
+      error: `API error (${response.status}): ${detail}`,
+      errorCode: "api",
+      errorParams: [response.status, detail],
     });
     return;
   }
@@ -269,8 +282,11 @@ async function callGemini(s, apiKey, model, request, sendResponse) {
   );
   if (!response.ok) {
     const err = await response.json().catch(() => ({}));
+    const detail = err.error?.message || response.statusText;
     sendResponse({
-      error: `API Fehler (${response.status}): ${err.error?.message || response.statusText}`,
+      error: `API error (${response.status}): ${detail}`,
+      errorCode: "api",
+      errorParams: [response.status, detail],
     });
     return;
   }
@@ -304,8 +320,11 @@ async function callLMStudio(s, apiKey, model, request, sendResponse) {
   });
   if (!response.ok) {
     const err = await response.json().catch(() => ({}));
+    const detail = err.error?.message || response.statusText;
     sendResponse({
-      error: `LM Studio Fehler (${response.status}): ${err.error?.message || response.statusText}`,
+      error: `LM Studio error (${response.status}): ${detail}`,
+      errorCode: "lmstudio",
+      errorParams: [response.status, detail],
     });
     return;
   }

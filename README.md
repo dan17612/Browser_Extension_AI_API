@@ -2,6 +2,15 @@
 
 A modern browser extension that brings multiple AI providers together under a single, unified chat interface.
 
+[![Latest release](https://img.shields.io/github/v/release/dan17612/AI_Chat_Pro_Browser_Extension?label=release&color=blue)](https://github.com/dan17612/AI_Chat_Pro_Browser_Extension/releases/latest)
+[![Downloads](https://img.shields.io/github/downloads/dan17612/AI_Chat_Pro_Browser_Extension/total?color=brightgreen)](https://github.com/dan17612/AI_Chat_Pro_Browser_Extension/releases)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Manifest V3](https://img.shields.io/badge/Manifest-V3-orange)](manifest.json)
+
+> ### ⬇️ [**Download the latest release**](https://github.com/dan17612/AI_Chat_Pro_Browser_Extension/releases/latest)
+>
+> Grab the prebuilt ZIP from the Releases page, extract it, and load it as an unpacked extension. See [Installation](#installation-chrome--edge) below for the full steps.
+
 ## Preview
 
 ![Extension preview](./Aufzeichnung%202026-04-09%20195453.gif)
@@ -42,13 +51,21 @@ This release marks the first stable version of **AI Chat Pro Client** and introd
 
 ## Installation (Chrome / Edge)
 
-1. Clone this repository or download it as a ZIP and extract it.
-2. Open the extensions page in your browser:
+### Option 1 — Install the latest release (recommended)
+
+1. Open the [**Releases page**](https://github.com/dan17612/AI_Chat_Pro_Browser_Extension/releases/latest) and download the `ai-chat-pro-client-<version>.zip` asset.
+2. Extract the archive to a folder of your choice.
+3. Open the extensions page in your browser:
    - Chrome: `chrome://extensions`
    - Edge: `edge://extensions`
-3. Enable **Developer mode**.
-4. Click **Load unpacked**.
-5. Select the project root directory.
+4. Enable **Developer mode** (top right).
+5. Click **Load unpacked** and select the extracted folder.
+
+### Option 2 — Install from source (for development)
+
+1. Clone the repository: `git clone https://github.com/dan17612/AI_Chat_Pro_Browser_Extension.git`
+2. Open `chrome://extensions` (or `edge://extensions`) and enable **Developer mode**.
+3. Click **Load unpacked** and select the cloned project root directory.
 
 ## Usage
 

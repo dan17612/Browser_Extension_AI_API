@@ -174,6 +174,8 @@
     importFileInput: $("#import-file-input"),
     btnClearAll: $("#btn-clear-all"),
     btnResetSettings: $("#btn-reset-settings"),
+    messageList: $("#message-list"),
+    btnClearMessages: $("#btn-clear-messages"),
   };
 
   // ---- Init ----
@@ -184,6 +186,13 @@
     populateUI();
     bindEvents();
     loadStats();
+    // Trigger a fresh announcement fetch (keeps the history up to date even
+    // if the user only ever opens the options page) and render whatever we have.
+    if (window.announcement) {
+      window.announcement.fetch(false).finally(() => renderMessageHistory());
+    } else {
+      renderMessageHistory();
+    }
   }
 
   function applyLanguage() {
@@ -521,8 +530,21 @@
         btn.classList.add("active");
         $$(".settings-section").forEach((s) => s.classList.remove("active"));
         $(`#section-${btn.dataset.section}`).classList.add("active");
+        if (btn.dataset.section === "messages") {
+          renderMessageHistory();
+        }
       });
     });
+
+    // Clear message history
+    if (dom.btnClearMessages) {
+      dom.btnClearMessages.addEventListener("click", async () => {
+        if (window.announcement) {
+          await window.announcement.clearHistory();
+        }
+        renderMessageHistory();
+      });
+    }
 
     // Provider
     dom.providerSelect.addEventListener("change", () => {
@@ -792,6 +814,90 @@
     const totalMessages = convos.reduce((sum, c) => sum + c.messages.length, 0);
     dom.statConversations.textContent = convos.length;
     dom.statMessages.textContent = totalMessages;
+  }
+
+  // ---- Message history (announcements) ----
+  async function renderMessageHistory() {
+    if (!dom.messageList) return;
+    dom.messageList.innerHTML = "";
+
+    if (!window.announcement) {
+      const empty = document.createElement("div");
+      empty.className = "message-empty";
+      empty.textContent = t("messages.empty");
+      dom.messageList.appendChild(empty);
+      return;
+    }
+
+    const history = await window.announcement.getHistory();
+    if (!history.length) {
+      const empty = document.createElement("div");
+      empty.className = "message-empty";
+      empty.textContent = t("messages.empty");
+      dom.messageList.appendChild(empty);
+      return;
+    }
+
+    const lang = window.i18n ? window.i18n.i18nGetLang() : "en";
+    const fmt = new Intl.DateTimeFormat(lang === "en" ? undefined : lang, {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+
+    history.forEach((entry) => {
+      const type = ["info", "update", "warning"].includes(entry.type)
+        ? entry.type
+        : "info";
+
+      const card = document.createElement("div");
+      card.className = `message-card message-${type}`;
+
+      const header = document.createElement("div");
+      header.className = "message-card-header";
+
+      const icon = document.createElement("span");
+      icon.className = "message-icon";
+      icon.textContent =
+        type === "warning" ? "⚠️" : type === "update" ? "⬆️" : "ℹ️";
+      header.appendChild(icon);
+
+      const title = document.createElement("div");
+      title.className = "message-card-title";
+      title.textContent = window.announcement.pickLocalized(entry.title, lang);
+      header.appendChild(title);
+
+      const time = document.createElement("span");
+      time.className = "message-card-time";
+      time.textContent = entry.receivedAt ? fmt.format(entry.receivedAt) : "";
+      header.appendChild(time);
+
+      card.appendChild(header);
+
+      const body = window.announcement.pickLocalized(entry.body, lang);
+      if (body) {
+        const bodyEl = document.createElement("div");
+        bodyEl.className = "message-card-body";
+        bodyEl.textContent = body;
+        card.appendChild(bodyEl);
+      }
+
+      if (entry.link) {
+        const link = document.createElement("a");
+        link.className = "message-card-link";
+        link.href = entry.link;
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+        link.textContent =
+          window.announcement.pickLocalized(entry.linkLabel, lang) ||
+          entry.link;
+        card.appendChild(link);
+      }
+
+      dom.messageList.appendChild(card);
+    });
   }
 
   /**

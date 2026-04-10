@@ -1,0 +1,24 @@
+{
+  "id": "2026-04-10-v1.1.0",
+  "type": "update",
+  "title": {
+    "en": "Update available",
+    "de": "Update verfügbar",
+    "ru": "Доступно обновление"
+  },
+  "body": {
+    "en": "Version 1.1.0 of AI Chat Pro Client is now available with new features and improvements.",
+    "de": "Version 1.1.0 von AI Chat Pro Client ist jetzt verfügbar – mit neuen Funktionen und Verbesserungen.",
+    "ru": "Доступна версия 1.1.0 AI Chat Pro Client с новыми функциями и улучшениями."
+  },
+  "link": "https://github.com/dan17612/AI_Chat_Pro_Browser_Extension/releases/latest",
+  "linkLabel": {
+    "en": "Download",
+    "de": "Herunterladen",
+    "ru": "Скачать"
+  },
+  "targetVersion": "1.1.0",
+  "minVersion": null,
+  "dismissable": true,
+  "expiresAt": null
+}

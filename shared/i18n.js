@@ -76,6 +76,7 @@
       "nav.model": "Model",
       "nav.appearance": "Appearance",
       "nav.behavior": "Behavior",
+      "nav.messages": "Messages",
       "nav.data": "Data",
 
       // Options – API section
@@ -201,6 +202,16 @@
       "error.api": "API error ({0}): {1}",
       "error.lmstudio": "LM Studio error ({0}): {1}",
 
+      // Announcement banner
+      "announcement.dismiss": "Dismiss",
+
+      // Options – Messages section
+      "messages.title": "Messages",
+      "messages.subtitle":
+        "Recent announcements from the developer. Messages you dismissed in the chat banner are still listed here.",
+      "messages.empty": "No messages yet.",
+      "messages.clear": "Clear message history",
+
       // Saved indicator
       "status.saved": "Saved",
     },
@@ -279,6 +290,7 @@
       "nav.model": "Modell",
       "nav.appearance": "Darstellung",
       "nav.behavior": "Verhalten",
+      "nav.messages": "Nachrichten",
       "nav.data": "Daten",
 
       // Options – API section
@@ -403,6 +415,16 @@
       "error.api": "API Fehler ({0}): {1}",
       "error.lmstudio": "LM Studio Fehler ({0}): {1}",
 
+      // Announcement banner
+      "announcement.dismiss": "Ausblenden",
+
+      // Options – Messages section
+      "messages.title": "Nachrichten",
+      "messages.subtitle":
+        "Aktuelle Mitteilungen des Entwicklers. Nachrichten, die du im Chat-Banner weggeklickt hast, findest du hier weiterhin.",
+      "messages.empty": "Noch keine Nachrichten.",
+      "messages.clear": "Nachrichtenverlauf löschen",
+
       // Saved indicator
       "status.saved": "Gespeichert",
     },
@@ -479,6 +501,7 @@
       "nav.model": "Модель",
       "nav.appearance": "Внешний вид",
       "nav.behavior": "Поведение",
+      "nav.messages": "Сообщения",
       "nav.data": "Данные",
 
       // Options – API section
@@ -602,6 +625,16 @@
       "error.connection": "Ошибка соединения: {0}",
       "error.api": "Ошибка API ({0}): {1}",
       "error.lmstudio": "Ошибка LM Studio ({0}): {1}",
+
+      // Announcement banner
+      "announcement.dismiss": "Скрыть",
+
+      // Options – Messages section
+      "messages.title": "Сообщения",
+      "messages.subtitle":
+        "Последние объявления от разработчика. Сообщения, которые вы скрыли в баннере чата, по-прежнему доступны здесь.",
+      "messages.empty": "Сообщений пока нет.",
+      "messages.clear": "Очистить историю сообщений",
 
       // Saved indicator
       "status.saved": "Сохранено",

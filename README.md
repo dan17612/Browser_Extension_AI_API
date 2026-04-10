@@ -48,6 +48,7 @@ This release marks the first stable version of **AI Chat Pro Client** and introd
 - [`options/options.js`](options/options.js) — Provider configuration, model checks, backup I/O
 - [`background/background.js`](background/background.js) — Provider API routing in the service worker
 - [`shared/i18n.js`](shared/i18n.js) — Translation dictionary and helpers (EN / DE / RU)
+- [`shared/announcement.js`](shared/announcement.js) — Remote announcement banner: fetch, cache, version filter, render
 
 ## Installation (Chrome / Edge)
 
@@ -84,6 +85,40 @@ This release marks the first stable version of **AI Chat Pro Client** and introd
 - **OpenAI / Anthropic / Gemini / Perplexity**
   - Each provider has its own API key field. Keys are stored locally and never shared.
   - The *Base URL (advanced)* field lets you point to OpenAI-compatible proxies or self-hosted gateways.
+
+## Remote Announcements
+
+The extension fetches an optional announcement banner from `https://schiller.pw/AIChatProClientMessage/main.json` once per hour and displays it above the chat area. This is used for release notifications, security advisories, or general news. The fetch is cached locally and never sends any data about the user.
+
+The endpoint serves a JSON file with the following shape:
+
+```json
+{
+  "id": "2026-04-10-v1.1.0",
+  "type": "update",
+  "title":     { "en": "Update available", "de": "Update verfügbar", "ru": "Доступно обновление" },
+  "body":      { "en": "Version 1.1.0 …", "de": "Version 1.1.0 …", "ru": "Доступна версия 1.1.0 …" },
+  "linkLabel": { "en": "Download", "de": "Herunterladen", "ru": "Скачать" },
+  "link": "https://github.com/dan17612/AI_Chat_Pro_Browser_Extension/releases/latest",
+  "targetVersion": "1.1.0",
+  "minVersion": null,
+  "dismissable": true,
+  "expiresAt": null
+}
+```
+
+| Field | Description |
+| --- | --- |
+| `id` | Unique identifier. Bump this value to re-show the banner to users who previously dismissed it. |
+| `type` | One of `info`, `update`, `warning`. Controls the banner color. |
+| `title` / `body` / `linkLabel` | Either a plain string or an object keyed by language code (`en`, `de`, `ru`). Falls back to `en` if the active language has no entry. |
+| `link` | Optional URL. When present, a button is rendered. |
+| `targetVersion` | The banner is shown only if the installed extension version is **older** than this value. Users on the latest version will not see it; once a new release with a higher `targetVersion` is published, the banner reappears. |
+| `minVersion` | Optional lower bound. The banner is hidden for installs below this version. |
+| `dismissable` | If `false`, the banner cannot be closed until the `id` changes or it expires. |
+| `expiresAt` | Optional ISO-8601 timestamp. The banner disappears automatically afterwards. |
+
+A ready-to-host example lives in [`examples/announcement-main.json`](examples/announcement-main.json).
 
 ## Development
 

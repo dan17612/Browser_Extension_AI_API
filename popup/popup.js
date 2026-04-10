@@ -45,6 +45,7 @@
     renameInput: $("#rename-input"),
     confirmRename: $("#confirm-rename"),
     toastContainer: $("#toast-container"),
+    announcementContainer: $("#announcement-container"),
   };
 
   // ---- Initialize ----
@@ -56,6 +57,10 @@
     renderConversationList();
     renderActiveChat();
     bindEvents();
+    // Remote announcement banner — runs in the background, never blocks the UI
+    if (window.announcement && dom.announcementContainer) {
+      window.announcement.init(dom.announcementContainer);
+    }
   }
 
   async function loadState() {

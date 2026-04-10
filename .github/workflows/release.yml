@@ -1,0 +1,55 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Read version from manifest
+        id: meta
+        run: |
+          VERSION=$(jq -r .version manifest.json)
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Verify tag matches manifest version
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          if [ "$TAG" != "${{ steps.meta.outputs.version }}" ]; then
+            echo "Tag $GITHUB_REF_NAME does not match manifest version ${{ steps.meta.outputs.version }}"
+            exit 1
+          fi
+
+      - name: Build extension zip
+        run: |
+          mkdir -p dist
+          zip -r "dist/ai-chat-pro-client-${{ steps.meta.outputs.version }}.zip" \
+            manifest.json \
+            background \
+            popup \
+            options \
+            shared \
+            icons \
+            README.md \
+            -x "*.DS_Store"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: AI Chat Pro Client v${{ steps.meta.outputs.version }}
+          tag_name: ${{ github.ref_name }}
+          generate_release_notes: true
+          append_body: true
+          body_path: .github/release-notes.md
+          files: dist/ai-chat-pro-client-${{ steps.meta.outputs.version }}.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -18,7 +18,7 @@ jobs:
       - name: Read version from manifest
         id: meta
         run: |
-          VERSION=$(jq -r .version manifest.json)
+          VERSION=$(jq -r .version browser-extension/manifest.json)
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Verify tag matches manifest version
@@ -32,14 +32,18 @@ jobs:
       - name: Build extension zip
         run: |
           mkdir -p dist
-          zip -r "dist/ai-chat-pro-client-${{ steps.meta.outputs.version }}.zip" \
+          cd browser-extension
+          zip -r "../dist/ai-chat-pro-client-${{ steps.meta.outputs.version }}.zip" \
             manifest.json \
             background \
             popup \
             options \
-            shared \
             icons \
-            README.md \
+            -x "*.DS_Store"
+          cd ..
+          # Include shared/ so the extension finds i18n.js, storage.js, announcement.js
+          zip -r "dist/ai-chat-pro-client-${{ steps.meta.outputs.version }}.zip" \
+            shared \
             -x "*.DS_Store"
 
       - name: Create GitHub Release

@@ -84,13 +84,21 @@
     return true;
   }
 
+  // Use window.Storage (shared/storage.js) which auto-detects
+  // chrome.storage.local (extension) vs localStorage (web app).
+  function getStore() {
+    return window.Storage || null;
+  }
+
   /**
-   * Fetch the announcement JSON, using a TTL-based cache in chrome.storage.local.
+   * Fetch the announcement JSON, using a TTL-based cache.
    * Returns null on failure (network, JSON parse, etc).
    */
   async function fetchAnnouncement(force) {
+    const store = getStore();
+    if (!store) return null;
     try {
-      const stored = await chrome.storage.local.get(STORAGE_KEY);
+      const stored = await store.get(STORAGE_KEY);
       const cached = stored[STORAGE_KEY];
       if (
         !force &&
@@ -103,23 +111,19 @@
 
       const resp = await fetch(ENDPOINT, { cache: "no-store" });
       if (!resp.ok) {
-        // Keep stale cache on transient errors
         return cached ? cached.data : null;
       }
       const data = await resp.json();
-      await chrome.storage.local.set({
-        [STORAGE_KEY]: { data, fetchedAt: Date.now() },
-      });
-      // Append to history if this is a new id (kept indefinitely so users can
-      // re-read messages they accidentally dismissed).
+      await store.set({ [STORAGE_KEY]: { data, fetchedAt: Date.now() } });
       if (data && data.id) {
         await appendHistory(data);
       }
       return data;
     } catch (err) {
-      // Network error / invalid JSON: fall back to cache if available
       try {
-        const stored = await chrome.storage.local.get(STORAGE_KEY);
+        const store2 = getStore();
+        if (!store2) return null;
+        const stored = await store2.get(STORAGE_KEY);
         return stored[STORAGE_KEY] ? stored[STORAGE_KEY].data : null;
       } catch (_) {
         return null;
@@ -128,26 +132,31 @@
   }
 
   async function getDismissedId() {
-    const stored = await chrome.storage.local.get(DISMISSED_KEY);
+    const store = getStore();
+    if (!store) return null;
+    const stored = await store.get(DISMISSED_KEY);
     return stored[DISMISSED_KEY] || null;
   }
 
   async function markDismissed(id) {
-    if (!id) return;
-    await chrome.storage.local.set({ [DISMISSED_KEY]: id });
+    const store = getStore();
+    if (!id || !store) return;
+    await store.set({ [DISMISSED_KEY]: id });
   }
 
   async function getHistory() {
-    const stored = await chrome.storage.local.get(HISTORY_KEY);
+    const store = getStore();
+    if (!store) return [];
+    const stored = await store.get(HISTORY_KEY);
     const list = stored[HISTORY_KEY];
     return Array.isArray(list) ? list : [];
   }
 
   async function appendHistory(announcement) {
-    if (!announcement || !announcement.id) return;
+    const store = getStore();
+    if (!announcement || !announcement.id || !store) return;
     try {
       const history = await getHistory();
-      // Replace existing entry with same id (keeps newest copy on top), otherwise prepend.
       const filtered = history.filter((entry) => entry.id !== announcement.id);
       filtered.unshift({
         id: announcement.id,
@@ -158,15 +167,15 @@
         linkLabel: announcement.linkLabel || null,
         receivedAt: Date.now(),
       });
-      const trimmed = filtered.slice(0, HISTORY_MAX);
-      await chrome.storage.local.set({ [HISTORY_KEY]: trimmed });
+      await store.set({ [HISTORY_KEY]: filtered.slice(0, HISTORY_MAX) });
     } catch (_) {
       // History is best-effort; never break the fetch path.
     }
   }
 
   async function clearHistory() {
-    await chrome.storage.local.remove(HISTORY_KEY);
+    const store = getStore();
+    if (store) await store.remove(HISTORY_KEY);
   }
 
   /**

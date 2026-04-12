@@ -39,10 +39,6 @@ jobs:
             popup \
             options \
             icons \
-            -x "*.DS_Store"
-          cd ..
-          # Include shared/ so the extension finds i18n.js, storage.js, announcement.js
-          zip -r "dist/ai-chat-pro-client-${{ steps.meta.outputs.version }}.zip" \
             shared \
             -x "*.DS_Store"
 

@@ -23,6 +23,7 @@
 
   const dom = {
     app: $("#app"),
+    offlineBanner: $("#offline-banner"),
     sidebar: $("#sidebar"),
     sidebarOverlay: $("#sidebar-overlay"),
     conversationList: $("#conversation-list"),
@@ -67,6 +68,15 @@
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.register("./sw.js").catch(() => {});
     }
+    // Offline detection
+    function updateOfflineBanner() {
+      if (dom.offlineBanner) {
+        dom.offlineBanner.classList.toggle("visible", !navigator.onLine);
+      }
+    }
+    window.addEventListener("online", updateOfflineBanner);
+    window.addEventListener("offline", updateOfflineBanner);
+    updateOfflineBanner();
   }
 
   async function loadState() {

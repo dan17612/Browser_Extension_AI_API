@@ -3,7 +3,7 @@
 // Cache-first strategy for all web-app assets.
 // ============================================
 
-const CACHE_NAME = "ai-chat-pro-v1";
+const CACHE_NAME = "ai-chat-pro-v2";
 
 const PRECACHE_URLS = [
   "./",
@@ -18,9 +18,9 @@ const PRECACHE_URLS = [
   "./icons/icon16.png",
   "./icons/icon48.png",
   "./icons/icon128.png",
-  "../shared/i18n.js",
-  "../shared/storage.js",
-  "../shared/announcement.js",
+  "./shared/i18n.js",
+  "./shared/storage.js",
+  "./shared/announcement.js",
 ];
 
 self.addEventListener("install", (event) => {
